@@ -1,0 +1,1995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>DHSUD VI | ELUPDD - CLUP & ZO Platform | Geospatial Innovation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <style>
+    /* ===== BASE STYLES (from indexGUI.html) ===== */
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Inter", "Segoe UI", Roboto, sans-serif; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 1.5rem 1.5rem 2rem;
+      background: #f4f7fc;
+      position: relative;
+      scroll-behavior: smooth;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(ellipse at 20% 50%, rgba(26, 115, 232, 0.08) 0%, transparent 60%),
+                  radial-gradient(ellipse at 80% 50%, rgba(0, 200, 150, 0.06) 0%, transparent 60%),
+                  linear-gradient(145deg, #f0f4f8 0%, #e8edf3 100%);
+      z-index: 0;
+    }
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeUp {
+      0% { opacity: 0; transform: translateY(25px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideInLeft {
+      0% { opacity: 0; transform: translateX(-40px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes slideInRight {
+      0% { opacity: 0; transform: translateX(40px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+      100% { transform: translateY(0px); }
+    }
+    .animate-fadeUp { animation: fadeUp 0.7s ease forwards; }
+    .animate-slideLeft { animation: slideInLeft 0.6s ease forwards; }
+    .animate-slideRight { animation: slideInRight 0.6s ease forwards; }
+
+    .scroll-reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.1), transform 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    }
+    .scroll-reveal.revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ===== HEADER / NAVIGATION (from indexGUI.html) ===== */
+    .app-header {
+      width: 100%;
+      max-width: 1280px;
+      margin-bottom: 1.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      background: white;
+      padding: 0.6rem 1.8rem;
+      border-radius: 40px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+      position: relative;
+      z-index: 5;
+    }
+    .app-header .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .app-header .brand img {
+      height: 42px;
+      width: auto;
+      display: block;
+      border-radius: 8px;
+    }
+    .app-header .brand span {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #1e3a8a;
+      letter-spacing: -0.3px;
+    }
+    .app-header .brand small {
+      font-weight: 400;
+      font-size: 0.6rem;
+      color: #64748b;
+      display: block;
+      margin-top: -2px;
+      letter-spacing: 0.3px;
+    }
+
+    /* Navigation links - center */
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      flex-wrap: wrap;
+      flex: 1;
+      justify-content: center;
+    }
+    .nav-links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 0.4rem 0.9rem;
+      border-radius: 30px;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-decoration: none;
+      color: #1e3a8a;
+      background: transparent;
+      transition: all 0.25s ease;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+    .nav-links a i { font-size: 0.8rem; }
+    .nav-links a:hover {
+      background: #dbeafe;
+      border-color: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12);
+    }
+    .nav-links a.active {
+      background: #1e3a8a;
+      color: white;
+      box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+    }
+    .nav-links a.active:hover {
+      background: #2563eb;
+    }
+
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    .dropbtn {
+      background: none;
+      border: none;
+      font-family: inherit;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 0.4rem 0.9rem;
+      border-radius: 30px;
+      font-weight: 600;
+      font-size: 0.75rem;
+      color: #1e3a8a;
+      background: transparent;
+      transition: all 0.25s ease;
+      border: 1px solid transparent;
+    }
+    .dropbtn:hover {
+      background: #dbeafe;
+      border-color: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12);
+    }
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background: white;
+      min-width: 210px;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+      border-radius: 16px;
+      z-index: 1000;
+      top: 36px;
+      left: 0;
+      border: 1px solid #eef2ff;
+      padding: 0.3rem 0;
+    }
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+    .dropdown-content a {
+      display: block;
+      padding: 0.6rem 1.2rem;
+      color: #1e293b;
+      font-size: 0.75rem;
+      text-decoration: none;
+      border: none;
+      background: none;
+      border-radius: 0;
+    }
+    .dropdown-content a:hover {
+      background: #eff6ff;
+    }
+    .dropdown-submenu {
+      position: relative;
+    }
+    .submenu-trigger {
+      background: none;
+      border: none;
+      width: 100%;
+      text-align: left;
+      padding: 0.6rem 1.2rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #1e293b;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: inherit;
+    }
+    .submenu-trigger:hover { background: #eff6ff; }
+    .arrow-right { font-size: 0.7rem; margin-left: 1rem; }
+    .submenu-content {
+      display: none;
+      position: absolute;
+      left: 100%;
+      top: 0;
+      background: white;
+      min-width: 170px;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+      border-radius: 16px;
+      border: 1px solid #eef2ff;
+      z-index: 1001;
+      padding: 0.3rem 0;
+    }
+    .dropdown-submenu:hover .submenu-content {
+      display: block;
+    }
+    .submenu-content a { padding: 0.6rem 1.2rem; }
+    .dropbtn::after {
+      content: " ▾";
+      font-size: 0.6rem;
+      opacity: 0.6;
+    }
+    .dropdown:hover .dropbtn::after {
+      opacity: 1;
+    }
+
+    /* User menu - right side */
+    .user-menu-section {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #f1f5f9;
+      padding: 0.15rem 0.5rem 0.15rem 0.7rem;
+      border-radius: 60px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .user-menu:hover { background: #e2e8f0; }
+    .user-avatar {
+      width: 28px;
+      height: 28px;
+      background: #2563eb;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 0.7rem;
+    }
+    .user-name {
+      font-size: 0.7rem;
+      font-weight: 500;
+    }
+    .role-badge-header {
+      background: #e2e8f0;
+      padding: 0.1rem 0.5rem;
+      border-radius: 20px;
+      font-size: 0.55rem;
+      font-weight: 600;
+    }
+    .role-badge-header.admin { background: #dcfce7; color: #166534; }
+    .role-badge-header.staff { background: #dbeafe; color: #1e40af; }
+    .user-dropdown-menu {
+      position: absolute;
+      top: 40px;
+      right: 0;
+      background: white;
+      border-radius: 20px;
+      min-width: 180px;
+      box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.15);
+      border: 1px solid #eef2ff;
+      overflow: hidden;
+      display: none;
+      z-index: 200;
+    }
+    .user-dropdown-item {
+      padding: 0.7rem 1.2rem;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+    .user-dropdown-item:hover { background: #f8fafc; }
+    .login-prompt {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #f1f5f9;
+      padding: 0.2rem 0.8rem 0.2rem 1rem;
+      border-radius: 60px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: #1e3a8a;
+    }
+    .login-prompt:hover {
+      background: #2563eb;
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    /* ===== TOAST NOTIFICATIONS (from indexGUI.html) ===== */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 999999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 400px;
+      width: 100%;
+      pointer-events: none;
+    }
+    .toast {
+      pointer-events: auto;
+      background: white;
+      border-radius: 16px;
+      padding: 1rem 1.5rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transform: translateX(120%);
+      animation: slideIn 0.5s ease forwards;
+      border-left: 5px solid #2563eb;
+      min-height: 60px;
+    }
+    .toast.hiding { animation: slideOut 0.4s ease forwards; }
+    .toast-success { border-left-color: #10b981; }
+    .toast-error { border-left-color: #ef4444; }
+    .toast-info { border-left-color: #2563eb; }
+    .toast-warning { border-left-color: #f59e0b; }
+
+    .toast-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .toast-success .toast-icon { background: #d1fae5; color: #059669; }
+    .toast-error .toast-icon { background: #fee2e2; color: #dc2626; }
+    .toast-info .toast-icon { background: #dbeafe; color: #2563eb; }
+    .toast-warning .toast-icon { background: #fef3c7; color: #d97706; }
+
+    .toast-content { flex: 1; }
+    .toast-title { font-weight: 700; font-size: 0.9rem; color: #0f172a; }
+    .toast-message { font-size: 0.8rem; color: #64748b; margin-top: 2px; }
+    .toast-close {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 1.2rem;
+      padding: 4px;
+      transition: color 0.3s ease;
+      flex-shrink: 0;
+    }
+    .toast-close:hover { color: #475569; }
+
+    @keyframes slideIn {
+      from { transform: translateX(120%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(120%); opacity: 0; }
+    }
+
+    /* ===== HERO (from indexGUI.html) ===== */
+    .hero-innovations {
+      background: white;
+      border-radius: 28px;
+      margin: 0 0 2rem 0;
+      padding: 2.5rem 3rem;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      position: relative;
+      overflow: hidden;
+    }
+    .innov-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .innov-text { flex: 1.2; }
+    .innov-text h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #0f2b3a, #1e4a76);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 0.8rem;
+    }
+    .innov-text p {
+      font-size: 0.95rem;
+      color: #2c4c6e;
+      margin-bottom: 1.5rem;
+      max-width: 90%;
+    }
+    .platform-badges {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .badge-pill {
+      background: #f1f5f9;
+      border-radius: 60px;
+      padding: 0.2rem 1rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #1e3a8a;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .badge-pill:hover {
+      background: #dbeafe;
+      border-color: #2563eb;
+      transform: translateY(-2px);
+    }
+    .badge-pill i { margin-right: 4px; }
+    .innov-image { flex: 0.8; text-align: center; animation: float 4s ease-in-out infinite; }
+    .innov-image img {
+      max-width: 100%;
+      border-radius: 24px;
+      background: white;
+      padding: 0.6rem;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    }
+
+    /* ===== SECTION HEADER (from indexGUI.html) ===== */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      margin-bottom: 1.8rem;
+      border-left: 6px solid #2563eb;
+      padding-left: 1rem;
+    }
+    .section-header h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #0f2b3a;
+    }
+    .section-header h2 i { color: #2563eb; margin-right: 8px; }
+
+    /* ===== ARTICLES ===== */
+    .articles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+    .article-card {
+      background: white;
+      border-radius: 24px;
+      padding: 1.5rem;
+      transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      border: 1px solid #e2e8f0;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    .article-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 22px 35px -12px rgba(0, 0, 0, 0.1);
+      border-color: #2563eb;
+    }
+    .article-date {
+      font-size: 0.7rem;
+      color: #2563eb;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .article-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .article-desc { font-size: 0.85rem; color: #4a627a; }
+    .view-link {
+      margin-top: 1rem;
+      display: inline-block;
+      color: #2563eb;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+
+    /* ===== VIDEO GALLERY ===== */
+    .video-gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+    }
+    .video-card {
+      background: white;
+      border-radius: 24px;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    .video-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 22px 35px -12px rgba(0, 0, 0, 0.12);
+      border-color: #2563eb;
+    }
+    .video-thumbnail {
+      position: relative;
+      cursor: pointer;
+      background: #0a2540;
+    }
+    .video-thumbnail img {
+      width: 100%;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+    .video-card:hover .video-thumbnail img { transform: scale(1.02); }
+    .play-button-overlay {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 56px; height: 56px;
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+    .play-button-overlay i { color: white; font-size: 26px; margin-left: 4px; }
+    .video-thumbnail:hover .play-button-overlay {
+      background: #ff0000;
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+    .video-info { padding: 1rem 1.2rem 1.2rem; }
+    .video-title { font-size: 1rem; font-weight: 700; color: #0f2b3a; margin-bottom: 0.2rem; }
+    .video-source { font-size: 0.7rem; color: #2563eb; font-weight: 500; }
+    .video-source i { margin-right: 4px; }
+    .watch-on-youtube {
+      display: inline-block;
+      margin-top: 0.4rem;
+      font-size: 0.7rem;
+      color: #ff0000;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .watch-on-youtube:hover { text-decoration: underline; }
+
+    /* ===== CALENDAR + NEWS ===== */
+    .calendar-widget {
+      background: white;
+      border-radius: 24px;
+      padding: 1.8rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      border: 1px solid #e2e8f0;
+      flex: 1.2;
+    }
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .calendar-header h3 { font-size: 1.2rem; font-weight: 700; color: #1e3a8a; }
+    .calendar-header h3 i { color: #2563eb; margin-right: 8px; }
+    .calendar-nav button {
+      background: #f1f5f9;
+      border: none;
+      border-radius: 30px;
+      padding: 4px 12px;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 500;
+      font-size: 0.75rem;
+      transition: all 0.2s;
+    }
+    .calendar-nav button:hover {
+      background: #2563eb;
+      color: white;
+    }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+    .calendar-weekday {
+      font-weight: 700;
+      font-size: 0.7rem;
+      text-align: center;
+      padding: 0.4rem 0;
+      background: #f8fcff;
+      border-radius: 16px;
+    }
+    .calendar-day {
+      aspect-ratio: 1;
+      background: #fbfeff;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.15s;
+      font-size: 0.8rem;
+      border: 1px solid #eef2ff;
+    }
+    .calendar-day.has-event {
+      background: #2563eb;
+      color: white;
+      box-shadow: 0 2px 8px #2563eb30;
+    }
+    .calendar-day.today {
+      border: 2px solid #f5b042;
+      background: #fff6e5;
+    }
+    .calendar-legend {
+      display: flex;
+      gap: 1rem;
+      margin-top: 0.5rem;
+      font-size: 0.65rem;
+      color: #475569;
+    }
+    .legend-dot {
+      display: inline-block;
+      width: 10px; height: 10px;
+      border-radius: 10px;
+      margin-right: 4px;
+    }
+    .legend-dot.event { background: #2563eb; }
+    .legend-dot.today { background: #f5b042; }
+    .view-calendar-link {
+      display: inline-block;
+      margin-top: 0.8rem;
+      color: #2563eb;
+      font-weight: 500;
+      text-decoration: none;
+      font-size: 0.75rem;
+    }
+
+    .news-section {
+      background: white;
+      border-radius: 24px;
+      padding: 1.5rem;
+      border: 1px solid #e2e8f0;
+      flex: 1;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    .news-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+      gap: 0.5rem;
+    }
+    .news-header h3 { font-size: 1.2rem; font-weight: 700; color: #0f2b3a; }
+    .news-tabs {
+      display: flex;
+      gap: 0.3rem;
+    }
+    .news-tab-btn {
+      background: none;
+      border: none;
+      padding: 0.3rem 0.9rem;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 0.65rem;
+      cursor: pointer;
+      color: #475569;
+      transition: 0.2s;
+    }
+    .news-tab-btn.active {
+      background: #2563eb;
+      color: white;
+    }
+    .news-list {
+      max-height: 360px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .news-card {
+      background: #fafdff;
+      border-radius: 18px;
+      padding: 0.8rem;
+      border: 1px solid #eef2ff;
+      transition: 0.15s;
+      cursor: pointer;
+      display: flex;
+      gap: 0.8rem;
+    }
+    .news-card:hover {
+      background: #f0f6ff;
+      transform: translateX(4px);
+    }
+    .news-date {
+      min-width: 50px;
+      text-align: center;
+      background: #f1f5f9;
+      border-radius: 14px;
+      padding: 0.2rem 0.4rem;
+    }
+    .news-date .day { font-size: 1rem; font-weight: 800; color: #2563eb; }
+    .news-date .month { font-size: 0.6rem; }
+    .news-title { font-weight: 700; font-size: 0.8rem; }
+    .news-desc { font-size: 0.65rem; color: #64748b; }
+    .news-badge {
+      background: #dbeafe;
+      color: #1e40af;
+      font-size: 0.55rem;
+      padding: 0.15rem 0.6rem;
+      border-radius: 30px;
+      display: inline-block;
+      margin-top: 0.2rem;
+    }
+
+    /* ===== VALUES ===== */
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    .value-card {
+      background: white;
+      border-radius: 24px;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    .value-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 22px 35px -12px rgba(0, 0, 0, 0.1);
+      border-color: #2563eb;
+    }
+    .value-icon {
+      width: 64px; height: 64px;
+      background: linear-gradient(135deg, #eef5ff, #dbeafe);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+    }
+    .value-icon i { font-size: 1.8rem; color: #2563eb; }
+    .value-card h3 { font-size: 1.3rem; font-weight: 700; color: #1e3a8a; margin-bottom: 0.8rem; }
+    .value-card p { font-size: 0.85rem; color: #475569; line-height: 1.6; }
+    .core-values-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 0.8rem 0;
+    }
+    .value-tag {
+      background: #dbeafe;
+      color: #1e40af;
+      padding: 0.3rem 1rem;
+      border-radius: 40px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    .core-values-note { font-size: 0.7rem; font-style: italic; color: #64748b; }
+
+    .mandate-card {
+      background: white;
+      border-radius: 24px;
+      padding: 2rem;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    .mandate-header {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 1.2rem;
+      padding-bottom: 0.8rem;
+      border-bottom: 2px solid #2563eb;
+    }
+    .mandate-header i { font-size: 1.6rem; color: #2563eb; }
+    .mandate-header h3 { font-size: 1.2rem; font-weight: 700; color: #1e3a8a; }
+    .mandate-content p, .mandate-content li {
+      font-size: 0.85rem;
+      color: #334155;
+      line-height: 1.6;
+      margin-bottom: 0.6rem;
+    }
+    .mandate-content ul { margin-left: 1.5rem; margin-bottom: 0.8rem; }
+
+    /* ===== CONTACT ===== */
+    .contact-section {
+      background: #0a2540;
+      color: white;
+      border-radius: 28px;
+      padding: 2.5rem;
+      margin: 2rem 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+    .contact-info h3, .contact-form h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.8rem; }
+    .contact-details { margin: 1rem 0; }
+    .contact-details div {
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+    .contact-details i { width: 24px; color: #3b82f6; }
+    .map-container {
+      margin-top: 1rem;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 2px solid #ffffff20;
+    }
+    .map-container iframe {
+      width: 100%;
+      height: 220px;
+      border: none;
+      display: block;
+    }
+    .contact-form input,
+    .contact-form textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 24px;
+      border: none;
+      margin-bottom: 10px;
+      background: #ffffff20;
+      color: white;
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+    .contact-form input::placeholder,
+    .contact-form textarea::placeholder { color: #cbd5e1; }
+    .contact-form button { background: #2563eb; margin-top: 0.3rem; width: 100%; }
+
+    /* ===== BUTTONS ===== */
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 0.8rem 2rem;
+      border-radius: 40px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+    .btn-primary:hover {
+      background: #1d4ed8;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px -8px #2563eb70;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1.5px solid #2563eb;
+      color: #2563eb;
+      padding: 0.8rem 2rem;
+      border-radius: 40px;
+      font-weight: 600;
+      transition: 0.2s;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+    .btn-outline:hover {
+      background: #2563eb10;
+      transform: translateY(-2px);
+    }
+
+    /* ===== FOOTER ===== */
+    .footer-new {
+      background: #0a2540;
+      color: #b9d0e7;
+      padding: 2rem 0;
+      margin-top: 3rem;
+      border-top: 1px solid #2d4f6e;
+      width: 100%;
+    }
+    .footer-grid {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+    .social-icons i {
+      font-size: 1.6rem;
+      margin-right: 0.8rem;
+      color: white;
+      transition: 0.2s;
+      cursor: pointer;
+    }
+    .social-icons i:hover {
+      transform: translateY(-4px);
+      color: #3b82f6;
+    }
+    .footer-new .logo-image {
+      height: 40px;
+      width: auto;
+      filter: brightness(0) invert(1);
+      margin-bottom: 12px;
+    }
+
+    /* ===== LOGIN MODAL (from indexGUI.html) ===== */
+    .login-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    }
+    .login-modal.active { display: flex; }
+    .login-modal-content {
+      background: white;
+      border-radius: 2.5rem;
+      max-width: 440px;
+      width: 92%;
+      overflow: hidden;
+      box-shadow: 0 30px 60px -20px rgba(0,0,0,0.4);
+      animation: fadeUp 0.3s ease;
+    }
+    .login-modal-brand {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+      padding: 2rem 1.5rem 1.5rem;
+      text-align: center;
+      color: white;
+      position: relative;
+    }
+    .login-modal-brand img {
+      width: 110px;
+      height: auto;
+      background: white;
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      display: inline-block;
+      margin-bottom: 0.6rem;
+    }
+    .login-modal-brand h3 { font-size: 1.4rem; font-weight: 800; margin-bottom: 0.1rem; }
+    .login-modal-brand p { font-size: 0.7rem; opacity: 0.85; }
+    .login-modal-close {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 1.8rem;
+      color: white;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: 0.2s;
+    }
+    .login-modal-close:hover { opacity: 1; transform: scale(1.1); }
+    .login-modal-body { padding: 1.8rem 1.8rem 1.2rem; }
+    .login-modal-body .input-group { margin-bottom: 1rem; }
+    .login-modal-body .input-group label {
+      display: block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #54708f;
+      margin-bottom: 0.3rem;
+      letter-spacing: 0.3px;
+    }
+    .login-modal-body .input-group input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 1rem;
+      font-size: 0.85rem;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+    }
+    .login-modal-body .input-group input:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    .login-submit-btn {
+      width: 100%;
+      padding: 0.8rem;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 1.2rem;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .login-submit-btn:hover { background: #1d4ed8; transform: translateY(-1px); }
+    .login-submit-btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none; }
+    .login-modal-footer {
+      text-align: center;
+      font-size: 0.6rem;
+      color: #94a3b8;
+      padding: 0.4rem 0 1rem;
+      border-top: 1px solid #eef2ff;
+      margin: 0 1.8rem;
+    }
+
+    /* ===== VIDEO MODAL ===== */
+    .video-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+      z-index: 20000;
+    }
+    .video-modal.active { display: flex; }
+    .video-modal-content {
+      position: relative;
+      width: 90%;
+      max-width: 1000px;
+      background: black;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    .video-modal-content iframe {
+      width: 100%;
+      height: 500px;
+      border: none;
+    }
+    .close-video-modal {
+      position: absolute;
+      top: -40px;
+      right: 0;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 30px;
+      cursor: pointer;
+      padding: 10px;
+    }
+
+    /* Event modal */
+    .event-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      z-index: 15000;
+    }
+    .event-modal.active { display: flex; }
+    .event-modal-content {
+      background: white;
+      border-radius: 24px;
+      max-width: 600px;
+      width: 92%;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 1.5rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      animation: fadeUp 0.3s ease;
+    }
+
+    /* Event detail panel below calendar */
+    .event-detail-panel {
+      background: #f8fcff;
+      border-radius: 24px;
+      padding: 1.2rem 1.5rem;
+      border: 1px solid #e2edf7;
+      margin-top: 1.2rem;
+    }
+    .event-detail-panel h4 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #0a2540;
+      margin-bottom: 0.8rem;
+    }
+    .event-detail-item {
+      display: flex;
+      gap: 0.8rem;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid #eef2ff;
+    }
+    .event-detail-item:last-child { border-bottom: none; }
+    .event-detail-date {
+      min-width: 80px;
+      font-weight: 600;
+      color: #2563eb;
+      font-size: 0.8rem;
+    }
+    .event-detail-name {
+      font-size: 0.85rem;
+      color: #1f3a5f;
+      font-weight: 600;
+    }
+    .event-detail-location {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+    .no-events-msg {
+      color: #94a3b8;
+      font-size: 0.85rem;
+      padding: 0.5rem 0;
+    }
+    .event-time {
+      font-size: 0.7rem;
+      color: #2563eb;
+      font-weight: 500;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+      .app-header { flex-wrap: wrap; gap: 0.5rem; padding: 0.6rem 1rem; }
+      .nav-links { flex: 1 1 100%; justify-content: center; order: 2; }
+      .user-menu-section { order: 3; justify-content: center; width: 100%; }
+      .brand { order: 1; }
+    }
+    @media (max-width: 800px) {
+      .app-header { flex-direction: column; align-items: stretch; padding: 0.6rem 1rem; }
+      .nav-links { flex-wrap: wrap; justify-content: center; order: 2; }
+      .user-menu-section { justify-content: center; margin-top: 0.3rem; order: 3; width: 100%; }
+      .brand { order: 1; justify-content: center; }
+      .hero-innovations { padding: 1.5rem; }
+      .innov-grid { flex-direction: column; }
+      .innov-text p { max-width: 100%; }
+      .innov-image { flex: 1; }
+      .calendar-widget { min-width: auto; }
+      .video-gallery-grid { grid-template-columns: 1fr; }
+      .values-grid { grid-template-columns: 1fr; }
+      .mandate-card { padding: 1.5rem; }
+      .contact-section { grid-template-columns: 1fr; padding: 1.5rem; }
+      .login-modal-brand img { width: 90px; }
+      .video-modal-content iframe { height: 300px; }
+      .play-button-overlay { width: 45px; height: 45px; }
+      .play-button-overlay i { font-size: 20px; }
+      .brand span { font-size: 0.9rem; }
+      .brand img { height: 34px; }
+    }
+    @media (max-width: 500px) {
+      .container { padding: 0 12px; }
+      .hero-innovations { padding: 1rem; margin: 1rem 0; }
+      .innov-text h1 { font-size: 1.6rem; }
+      .articles-grid { grid-template-columns: 1fr; }
+      .video-gallery-grid { grid-template-columns: 1fr; }
+      .section-header h2 { font-size: 1.2rem; }
+      .contact-section { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ===== HEADER (from indexGUI.html) ===== -->
+<div class="app-header">
+  <div class="brand">
+    <img src="img/DHSUD_LOGO.png" alt="DHSUD Logo" onerror="this.style.display='none'" />
+    <div>
+      <span>DHSUD VI - ELUPDD</span>
+      <small>CLUP & ZO Integrated System</small>
+    </div>
+  </div>
+  <div class="nav-links" id="mainNavContainer">
+    <!-- Dynamically rendered -->
+  </div>
+  <div class="user-menu-section" id="userMenuContainer">
+    <!-- Dynamically rendered -->
+  </div>
+</div>
+
+<main>
+  <div class="container">
+    <!-- ===== HERO (from indexGUI.html) ===== -->
+    <div class="hero-innovations">
+      <div class="innov-grid">
+        <div class="innov-text">
+          <h1>ELUPDD</h1>
+          <p>The Environmental, Land Use, and Urban Planning and Development Division (ELUPDD)—along with its national counterpart, the Bureau (ELUPDB)—is a core division under the Department of Human Settlements and Urban Development (DHSUD) in the Philippines. It leads the country's initiatives in human settlements planning, urban development policies, and spatial land allocation.</p>
+          <div class="platform-badges">
+            <span class="badge-pill" data-url="https://hazardhunter.georisk.gov.ph/"><i class="fas fa-map-marker-alt"></i> HazardHunterPH</span>
+            <span class="badge-pill" data-url="https://geoanalytics.georisk.gov.ph/"><i class="fas fa-chart-line"></i> GeoAnalyticsPH</span>
+            <span class="badge-pill" data-url="https://georisk.gov.ph/login"><i class="fas fa-draw-polygon"></i> GeoMapperPH</span>
+            <span class="badge-pill" data-url="https://georisk.gov.ph/"><i class="fas fa-layer-group"></i> Map&Feature</span>
+            <span class="badge-pill" data-url="https://data.georisk.gov.ph/"><i class="fas fa-globe-asia"></i> 3D Earth Risk</span>
+            <span class="badge-pill" data-url="https://plansmart.georisk.gov.ph/"><i class="fas fa-city"></i> PlanSmart</span>
+          </div>
+        </div>
+        <div class="innov-image">
+          <img src="img/ELUPDD.png" alt="ELUPDD Official Logo" onerror="this.style.display='none'" />
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ARTICLES ===== -->
+    <div class="articles-section scroll-reveal">
+      <div class="section-header"><h2><i class="fas fa-newspaper"></i> ARTICLES AND EVENTS</h2></div>
+      <div class="articles-grid" id="articlesGrid"></div>
+    </div>
+
+    <!-- ===== VIDEO GALLERY ===== -->
+    <div class="video-gallery-section scroll-reveal">
+      <div class="section-header"><h2><i class="fab fa-youtube"></i> FEATURED VIDEOS</h2></div>
+      <div class="video-gallery-grid" id="videoGalleryGrid"></div>
+    </div>
+
+    <!-- ===== CALENDAR + NEWS ===== -->
+    <div class="hero-grid scroll-reveal" style="display:flex; flex-wrap:wrap; gap:2rem; margin:2rem 0">
+      <!-- Calendar Widget with Event Details Below -->
+      <div class="calendar-widget" style="flex:1.2">
+        <div class="calendar-header">
+          <h3><i class="far fa-calendar-alt"></i> Calendar of Activities</h3>
+        </div>
+        <!-- Navigation moved to just above the calendar grid -->
+        <div class="calendar-nav" style="display:flex; justify-content:center; align-items:center; gap:1rem; margin-bottom:0.5rem;">
+          <button id="prevMonthWidget">◀ Prev</button>
+          <span id="currentMonthDisplay" style="font-weight:600; font-size:1rem; min-width:120px; text-align:center;"></span>
+          <button id="nextMonthWidget">Next ▶</button>
+        </div>
+        <div id="miniCalendarGrid" class="calendar-grid"></div>
+        <div class="calendar-legend">
+          <span><span class="legend-dot event"></span> Has Events</span>
+          <span><span class="legend-dot today"></span> Today</span>
+        </div>
+        <a href="calendar.html" class="view-calendar-link">📆 View Full Calendar →</a>
+        
+        <!-- Event Details Panel - BELOW CALENDAR -->
+        <div id="eventDetailPanel" class="event-detail-panel">
+          <h4>📌 Events on selected date</h4>
+          <div id="eventDetailList"><div class="no-events-msg">Click a date with events to see details.</div></div>
+        </div>
+      </div>
+      
+      <!-- News Section -->
+      <div class="news-section" style="flex:1">
+        <div class="news-header">
+          <h3>📰 News & Activities</h3>
+          <div class="news-tabs">
+            <button class="news-tab-btn active" data-tab="announcements">Announcements</button>
+            <button class="news-tab-btn" data-tab="upcoming">Upcoming Events</button>
+            <button class="news-tab-btn" data-tab="completed">Past Activities</button>
+          </div>
+        </div>
+        <div id="newsListContainer" class="news-list">Loading...</div>
+      </div>
+    </div>
+
+    <!-- ===== VALUES ===== -->
+    <div class="values-section scroll-reveal">
+      <div class="section-header"><h2><i class="fas fa-bullseye"></i> OUR FOUNDATION</h2></div>
+      <div class="values-grid">
+        <div class="value-card">
+          <div class="value-icon"><i class="fas fa-eye"></i></div>
+          <h3>Vision</h3>
+          <p>A strong institution and catalyst for the provision of adequate and affordable housing, inclusive human settlements and well-planned communities for every Filipino family.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon"><i class="fas fa-rocket"></i></div>
+          <h3>Mission</h3>
+          <p>To improve the lives of the Filipino people as the primary government agency in the management of housing, human settlements and urban development.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon"><i class="fas fa-gem"></i></div>
+          <h3>Core Values</h3>
+          <div class="core-values-list">
+            <span class="value-tag">Dynamism</span><span class="value-tag">Honesty</span>
+            <span class="value-tag">Service Excellence</span><span class="value-tag">Unity of Purpose</span><span class="value-tag">Education</span>
+          </div>
+          <p class="core-values-note">DHSUD - D.E.H.S.U. | Driven by Excellence, Honesty, Service, Unity</p>
+        </div>
+      </div>
+      <div class="mandate-card">
+        <div class="mandate-header">
+          <i class="fas fa-gavel"></i>
+          <h3>Our Mandate</h3>
+        </div>
+        <div class="mandate-content">
+          <p><strong>1.</strong> Act as the primary national government entity responsible for the management of housing, human settlements and urban development.</p>
+          <p><strong>2.</strong> Be the sole and main planning and policy-making, regulatory, program coordination, and performance monitoring entity for all housing, human settlement and urban development concerns, primarily focusing on the access to and the affordability of basic human needs. For this purpose, the following functions of HLURB are hereby transferred to the Department:</p>
+          <ul><li>The land use planning and monitoring function, including the imposition of penalties for noncompliance to ensure that LGUs will follow the planning guidelines and implement their CLUPs and ZOs;</li>
+          <li>The regulatory function, including the formulation, promulgation, and enforcement of rules, standards and guidelines over subdivisions, condominiums and similar real estate developments, and imposition of fines and other administrative sanctions for violations;</li>
+          <li>The registration, regulation and supervision of HOAs, including the imposition of fines for violations.</li></ul>
+          <p><strong>3.</strong> Develop and adopt a national strategy to immediately address the provision of adequate and affordable housing to all Filipinos, and ensure the alignment of the policies, programs, and projects of all its attached agencies to facilitate the achievement of this objective.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CONTACT ===== -->
+    <div class="contact-section scroll-reveal" id="contact">
+      <div class="contact-info">
+        <h3><i class="fas fa-headset"></i> CONTACT US</h3>
+        <p style="margin:0.8rem 0; opacity:0.9;">Have a question, comment or suggestion? We'd love to hear from you!</p>
+        <div class="contact-details">
+          <div><i class="fas fa-map-pin"></i> <strong>Location:</strong> Senator Benigno S. Aquino Jr. Ave, Mandurriao, Iloilo City, Iloilo</div>
+          <div><i class="fas fa-envelope"></i> <strong>Email:</strong> elupdd.region6@dhsud.gov.ph</div>
+          <div><i class="fas fa-phone-alt"></i> <strong>Call:</strong> +63 (033) 123-4567</div>
+        </div>
+        <div class="map-container">
+          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d773.179403259934!2d122.5530314!3d10.7097803!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33aefaab96770b99%3A0x5c2b7b8bed82d2c9!2sGaisano%20Iloilo%20City%20Center%20Mall!5e1!3m2!1sen!2sph!4v1749480000000!5m2!1sen!2sph" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+        <p style="font-size:0.7rem; margin-top:0.5rem; opacity:0.7"><i class="fas fa-external-link-alt"></i> <a href="https://www.google.com/maps/place/Gaisano+Iloilo+City+Center+Mall/@10.7097803,122.5530314,276m/data=!3m1!1e3!4m15!1m8!3m7!1s0x33aee56fe538d781:0xe8250cd6bc30a488!2sIloilo+City,+Iloilo!3b1!8m2!3d10.7301854!4d122.5591148!16zL20vMDR3ZGIx!3m5!1s0x33aefaab96770b99:0x5c2b7b8bed82d2c9!8m2!3d10.7097803!4d122.5536751!16s%2Fg%2F11b6dpplyw?entry=ttu" target="_blank" style="color:#3b82f6">Open in Google Maps →</a></p>
+      </div>
+      <div class="contact-form">
+        <form id="contactFormSim" onsubmit="alert('Message sent (demo). Thank you!'); return false;">
+          <input type="text" placeholder="Name" required />
+          <input type="email" placeholder="Email" required />
+          <input type="text" placeholder="Subject" />
+          <textarea placeholder="Message" rows="3"></textarea>
+          <button type="submit" class="btn-primary">Send Message</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer-new">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <img src="img/DHSUD_LOGO.png" alt="logo" class="logo-image" /><br />
+        <strong>DHSUD Region VI</strong><br />ELUPDD – CLUP & ZO Platform<br />Geospatial Innovation for Resilience
+      </div>
+      <div>
+        <strong>Our Social Networks</strong><br />Follow us for updates<br />
+        <div class="social-icons">
+          <a href="https://web.facebook.com/DHSUDR6" target="_blank" rel="noopener noreferrer"><i class="fab fa-facebook"></i></a>
+          <i class="fab fa-instagram"></i><i class="fab fa-twitter"></i>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center; margin-top:2rem; border-top:1px solid #2d4f6e; padding-top:1rem">© 2026 DHSUD VI — ELUPDD</div>
+  </div>
+</footer>
+
+<!-- ===== MODALS ===== -->
+<div id="loginModal" class="login-modal">
+  <div class="login-modal-content">
+    <div class="login-modal-brand">
+      <button class="login-modal-close" onclick="closeLoginModal()">&times;</button>
+      <img src="img/DHSUD_LOGO.png" alt="DHSUD Logo" onerror="this.style.display='none'" />
+      <h3>DHSUD Region VI</h3>
+      <p>ELUPDD · CLUP & ZO Platform</p>
+    </div>
+    <div class="login-modal-body">
+      <form id="modalLoginForm">
+        <div class="input-group">
+          <label><i class="fas fa-envelope"></i> Email Address</label>
+          <input type="email" id="modalLoginEmail" placeholder="name@dhsud.gov.ph" required />
+        </div>
+        <div class="input-group">
+          <label><i class="fas fa-lock"></i> Password</label>
+          <input type="password" id="modalLoginPassword" placeholder="Enter your password" required />
+        </div>
+        <button type="submit" class="login-submit-btn" id="loginModalBtn">→ Sign In</button>
+      </form>
+    </div>
+    <div class="login-modal-footer">🔐 Role-Based Access: Admin | Staff/Officer</div>
+  </div>
+</div>
+
+<div id="eventModal" class="event-modal">
+  <div class="event-modal-content" id="eventModalContent"></div>
+</div>
+
+<div id="videoModal" class="video-modal">
+  <div class="video-modal-content">
+    <button class="close-video-modal" onclick="closeVideoModal()">&times;</button>
+    <iframe id="videoIframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  </div>
+</div>
+
+<script>
+// ============================================
+// TOAST NOTIFICATION SYSTEM (from indexGUI.html)
+// ============================================
+function showToast(title, message, type = 'info', duration = 4000) {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  
+  const icons = {
+    success: 'fa-check-circle',
+    error: 'fa-times-circle',
+    warning: 'fa-exclamation-triangle',
+    info: 'fa-info-circle'
+  };
+  
+  toast.innerHTML = `
+    <div class="toast-icon"><i class="fas ${icons[type] || icons.info}"></i></div>
+    <div class="toast-content">
+      <div class="toast-title">${title}</div>
+      <div class="toast-message">${message}</div>
+    </div>
+    <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+  `;
+  
+  container.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.classList.add('hiding');
+    setTimeout(() => toast.remove(), 400);
+  }, duration);
+  
+  return toast;
+}
+
+// ============================================
+// CONFIGURATION
+// ============================================
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCYiLHesLAvoh6wV_gTQyTGYBwRqiBwDpiKiLsYHOntGVF2gW5NjWUS50YzoHaJmk/exec";
+let currentUser = null;
+let activities = [];
+let widgetCurrentDate = new Date();
+let selectedDateForDetail = null;
+
+const videoData = [
+  { id: 1, title: "DHSUD Geospatial Innovation and Resilience", videoId: "IG7Y-S0jUpM", source: "YouTube", thumbnail: "https://img.youtube.com/vi/IG7Y-S0jUpM/hqdefault.jpg" },
+  { id: 2, title: "CLUP & Zoning Ordinance Implementation", videoId: "idQvOMWNMGI", source: "YouTube", thumbnail: "https://img.youtube.com/vi/idQvOMWNMGI/hqdefault.jpg" },
+  { id: 3, title: "Regional Planning and Development", videoId: "9C4Ss9LGBX4", source: "YouTube", thumbnail: "https://img.youtube.com/vi/9C4Ss9LGBX4/hqdefault.jpg" }
+];
+
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
+function escapeHtml(s) { if (!s) return ""; return String(s).replace(/[&<>]/g, (m) => ({ "&":"&amp;","<":"&lt;",">":"&gt;" })[m]); }
+function encodePassword(p) { return btoa(p); }
+
+// ============================================
+// SESSION MANAGEMENT
+// ============================================
+function checkSession() {
+  const raw = localStorage.getItem("dhsud_session");
+  if (raw) {
+    try {
+      const s = JSON.parse(raw);
+      const diff = (new Date() - new Date(s.loggedInAt)) / (1000 * 60 * 60);
+      if (diff < 12 && s.email) {
+        currentUser = s;
+        return true;
+      } else localStorage.removeItem("dhsud_session");
+    } catch(e) { localStorage.removeItem("dhsud_session"); }
+  }
+  currentUser = null;
+  return false;
+}
+
+function getUserInitials(n) { if (!n) return "U"; let p = n.split(" "); if (p.length >= 2) return (p[0][0] + p[1][0]).toUpperCase(); return n.substring(0,2).toUpperCase(); }
+function getRoleLabel(r) { if (r === "admin") return "👑 Admin"; if (r === "encoder" || r === "staff") return "📋 Staff/Officer"; return "👁️ Viewer"; }
+function getRoleClass(r) { if (r === "admin") return "admin"; if (r === "encoder" || r === "staff") return "staff"; return "viewer"; }
+
+// ============================================
+// RENDER NAVIGATION & USER MENU
+// ============================================
+function renderMainNavigation() {
+  const container = document.getElementById("mainNavContainer");
+  if (!container) return;
+  let navHtml = `<a href="index.html" class="active"><i class="fas fa-home"></i> Home</a>`;
+  if (currentUser) {
+    navHtml += `
+      <div class="dropdown">
+        <button class="dropbtn">Certification</button>
+        <div class="dropdown-content">
+          <a href="lc.html">Locational Clearance</a>
+          <a href="SZC.html">Site Zoning Certification</a>
+        </div>
+      </div>
+      <div class="dropdown">
+        <button class="dropbtn">Land Use Plans</button>
+        <div class="dropdown-content">
+          <div class="dropdown-submenu">
+            <button class="submenu-trigger">CLUP & ZO <span class="arrow-right">▸</span></button>
+            <div class="submenu-content">
+              <a href="inventory.html">Inventory</a>
+              <a href="status.html">Status</a>
+            </div>
+          </div>
+          <a href="status.html">PDPFP</a>
+        </div>
+      </div>
+      <a href="Techsamp.html"><i class="fas fa-headset"></i> Technical Assistance</a>
+      <a href="lgu-info.html"><i class="fas fa-city"></i> LGU Information</a>
+      <a href="report.html"><i class="fas fa-chart-pie"></i> Reports</a>
+      <a href="calendar.html"><i class="fas fa-calendar-alt"></i> Calendar</a>
+      <a href="issuance.html"><i class="fas fa-file-alt"></i> Issuances</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+    `;
+  } else {
+    navHtml += `<a href="#about">About</a><a href="#contact">Contact</a>`;
+  }
+  container.innerHTML = navHtml;
+  // Fix dropdown submenu hover
+  setTimeout(() => {
+    document.querySelectorAll(".dropdown-submenu .submenu-trigger").forEach((trigger) => {
+      trigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const submenu = trigger.closest(".dropdown-submenu");
+        if (submenu) submenu.classList.toggle("open");
+      });
+    });
+    document.addEventListener("click", function (e) {
+      if (!e.target.closest(".dropdown-submenu")) {
+        document.querySelectorAll(".dropdown-submenu.open").forEach((s) => s.classList.remove("open"));
+      }
+    });
+  }, 10);
+}
+
+function renderUserMenu() {
+  const container = document.getElementById("userMenuContainer");
+  if (!container) return;
+  if (currentUser) {
+    const initials = getUserInitials(currentUser.fullName);
+    const firstName = currentUser.fullName?.split(" ")[0] || "User";
+    const roleLabel = getRoleLabel(currentUser.role);
+    const roleClass = getRoleClass(currentUser.role);
+    container.innerHTML = `
+      <div class="user-menu" id="userMenuDropdown" style="position:relative;">
+        <div class="user-avatar">${initials}</div>
+        <span class="user-name">${escapeHtml(firstName)}</span>
+        <span class="role-badge-header ${roleClass}">${roleLabel}</span>
+        <span style="font-size:0.6rem;">▼</span>
+        <div class="user-dropdown-menu">
+          <div class="user-dropdown-item">👤 ${escapeHtml(currentUser.email)}</div>
+          <div class="user-dropdown-item">🏢 ${escapeHtml(currentUser.office || "ELUPDD")}</div>
+          ${currentUser.role === "admin" ? `<div class="user-dropdown-item" id="adminConsoleLink">⚙️ Manage Users</div>` : ""}
+          <div class="user-dropdown-item" id="logoutDropdownBtn" style="color:#dc2626;">🚪 Sign Out</div>
+        </div>
+      </div>
+    `;
+    const userDiv = document.getElementById("userMenuDropdown");
+    if (userDiv) {
+      userDiv.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const menu = userDiv.querySelector(".user-dropdown-menu");
+        if (menu) menu.style.display = menu.style.display === "block" ? "none" : "block";
+      });
+      document.addEventListener("click", () => {
+        const menu = userDiv?.querySelector(".user-dropdown-menu");
+        if (menu) menu.style.display = "none";
+      });
+    }
+    if (currentUser.role === "admin") {
+      const adminBtn = document.getElementById("adminConsoleLink");
+      if (adminBtn) adminBtn.addEventListener("click", () => (window.location.href = "admin.html"));
+    }
+    const logoutBtn = document.getElementById("logoutDropdownBtn");
+    if (logoutBtn) logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("dhsud_session");
+      showToast("Logged Out", "You have been logged out successfully.", "info");
+      setTimeout(() => { window.location.href = "index.html"; }, 700);
+    });
+  } else {
+    container.innerHTML = `<div class="login-prompt" onclick="openLoginModal()"><i class="fas fa-sign-in-alt"></i> Sign In</div>`;
+  }
+}
+
+// ============================================
+// LOGIN MODAL
+// ============================================
+function openLoginModal() {
+  document.getElementById("loginModal").classList.add("active");
+}
+function closeLoginModal() {
+  document.getElementById("loginModal").classList.remove("active");
+}
+async function handleModalLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById("modalLoginEmail").value.trim().toLowerCase();
+  const password = document.getElementById("modalLoginPassword").value;
+  const btn = document.getElementById("loginModalBtn");
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = "⏳ Authenticating...";
+  try {
+    const resp = await fetch(`${GOOGLE_SCRIPT_URL}?action=get&data_type=users&_=${Date.now()}`);
+    const users = await resp.json();
+    const user = users.find((u) => u.email?.toLowerCase() === email);
+    if (!user) { showToast("Authentication Failed", "Account not found.", "error"); btn.innerHTML = originalText; btn.disabled = false; return false; }
+    if (user.password === encodePassword(password)) {
+      const session = { userId: user.id, email: user.email, fullName: user.fullName, office: user.office || "ELUPDD", role: user.role, loggedInAt: new Date().toISOString() };
+      localStorage.setItem("dhsud_session", JSON.stringify(session));
+      showToast("Welcome", `Welcome ${user.fullName?.split(" ")[0] || ""}!`, "success");
+      closeLoginModal();
+      setTimeout(() => window.location.reload(), 1000);
+    } else {
+      showToast("Authentication Failed", "Invalid password.", "error");
+    }
+  } catch (error) {
+    showToast("Connection Error", "Please try again.", "error");
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+  return false;
+}
+
+// ============================================
+// VIDEO MODAL
+// ============================================
+function openVideoModal(videoId) {
+  const modal = document.getElementById("videoModal");
+  const iframe = document.getElementById("videoIframe");
+  iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=1`;
+  modal.classList.add("active");
+}
+function closeVideoModal() {
+  const modal = document.getElementById("videoModal");
+  const iframe = document.getElementById("videoIframe");
+  iframe.src = "";
+  modal.classList.remove("active");
+}
+
+function renderVideoGallery() {
+  const container = document.getElementById("videoGalleryGrid");
+  if (!container) return;
+  container.innerHTML = videoData.map(video => `
+    <div class="video-card">
+      <div class="video-thumbnail" onclick="openVideoModal('${video.videoId}')">
+        <img src="${video.thumbnail}" alt="${escapeHtml(video.title)}" onerror="this.src='https://via.placeholder.com/480x360?text=Video+Thumbnail'">
+        <div class="play-button-overlay"><i class="fab fa-youtube"></i></div>
+      </div>
+      <div class="video-info">
+        <div class="video-title">${escapeHtml(video.title)}</div>
+        <div class="video-source"><i class="fab fa-youtube"></i> ${escapeHtml(video.source)}</div>
+        <a href="https://www.youtube.com/watch?v=${video.videoId}" target="_blank" class="watch-on-youtube"><i class="fab fa-youtube"></i> Watch on YouTube →</a>
+      </div>
+    </div>
+  `).join("");
+}
+
+// ============================================
+// CALENDAR & ACTIVITIES
+// ============================================
+function loadActivities() {
+  const stored = localStorage.getItem("calendarActivities");
+  if (stored) activities = JSON.parse(stored);
+  else {
+    const now = new Date();
+    // Seed events for current month
+    activities = [
+      { id: 101, name: "CLUP Formulation Workshop", type: "Workshop", startDateTime: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2, 9, 0).toISOString(), endDateTime: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 4, 17, 0).toISOString(), purpose: "CLUP workshop", location: "DHSUD Hall", status: "upcoming", meetingLink: "" },
+      { id: 102, name: "Zoning Ordinance Review", type: "Meeting", startDateTime: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 10, 0).toISOString(), endDateTime: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 16, 0).toISOString(), purpose: "ZO amendments", location: "Zoom", status: "upcoming", meetingLink: "https://zoom.us/j/123456789" },
+      { id: 103, name: "Regional Planning Session", type: "Workshop", startDateTime: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 3, 8, 30).toISOString(), endDateTime: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 3, 12, 0).toISOString(), purpose: "Regional planning and coordination", location: "Conference Room B", status: "upcoming", meetingLink: "" },
+      { id: 104, name: "LGU Consultation Meeting", type: "Meeting", startDateTime: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 5, 13, 0).toISOString(), endDateTime: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 5, 15, 0).toISOString(), purpose: "Consultation with LGUs", location: "Online via Google Meet", status: "upcoming", meetingLink: "https://meet.google.com/abc-defg" }
+    ];
+    activities.forEach((a) => { const end = new Date(a.endDateTime); a.status = end < new Date() ? "completed" : "upcoming"; });
+    localStorage.setItem("calendarActivities", JSON.stringify(activities));
+  }
+  renderMiniCalendar();
+  renderNewsAndActivities();
+  // Show today's events or first available
+  const today = new Date().toISOString().split("T")[0];
+  const todayEvents = getEventsForDate(today);
+  if (todayEvents.length > 0) {
+    updateEventDetailPanel(today);
+  } else {
+    // Find first date with events
+    const allDates = activities.map(a => new Date(a.startDateTime).toISOString().split("T")[0]);
+    const uniqueDates = [...new Set(allDates)].sort();
+    if (uniqueDates.length > 0) {
+      updateEventDetailPanel(uniqueDates[0]);
+    } else {
+      updateEventDetailPanel(null);
+    }
+  }
+}
+
+function getEventsForDate(dateStr) {
+  return activities.filter((act) => {
+    const start = new Date(act.startDateTime).toISOString().split("T")[0];
+    const end = new Date(act.endDateTime).toISOString().split("T")[0];
+    return start <= dateStr && end >= dateStr;
+  });
+}
+
+function renderMiniCalendar() {
+  const year = widgetCurrentDate.getFullYear(), month = widgetCurrentDate.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date().toISOString().split("T")[0];
+  const weekdays = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  let html = `<div class="calendar-grid">`;
+  weekdays.forEach((day) => (html += `<div class="calendar-weekday">${day}</div>`));
+  let dayCount = 1;
+  for (let i = 0; i < 42; i++) {
+    if (i < firstDay || dayCount > daysInMonth) {
+      html += `<div class="calendar-day"></div>`;
+      if (i >= firstDay) dayCount++;
+    } else {
+      const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(dayCount).padStart(2, "0")}`;
+      const hasEvent = getEventsForDate(dateStr).length > 0;
+      const isToday = dateStr === today;
+      let cls = "calendar-day";
+      if (hasEvent) cls += " has-event";
+      if (isToday) cls += " today";
+      html += `<div class="${cls}" onclick="handleDateClick('${dateStr}')"><span>${dayCount}</span></div>`;
+      dayCount++;
+    }
+  }
+  html += `</div>`;
+  document.getElementById("miniCalendarGrid").innerHTML = html;
+  const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  document.getElementById("currentMonthDisplay").innerText = `${monthNames[month]} ${year}`;
+}
+
+window.handleDateClick = function(dateStr) {
+  selectedDateForDetail = dateStr;
+  updateEventDetailPanel(dateStr);
+};
+
+function updateEventDetailPanel(dateStr) {
+  const container = document.getElementById("eventDetailList");
+  if (!container) return;
+  let events = [];
+  if (dateStr) {
+    events = getEventsForDate(dateStr);
+  }
+  if (events.length === 0) {
+    container.innerHTML = `<div class="no-events-msg">${dateStr ? 'No events on this date.' : 'Click a date with events to see details.'}</div>`;
+    return;
+  }
+  const sorted = events.sort((a,b) => new Date(a.startDateTime) - new Date(b.startDateTime));
+  let html = '';
+  sorted.forEach(ev => {
+    const start = new Date(ev.startDateTime);
+    const dateLabel = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const timeLabel = start.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    html += `<div class="event-detail-item">
+      <div class="event-detail-date">${dateLabel}<br><span class="event-time">${timeLabel}</span></div>
+      <div><div class="event-detail-name">${escapeHtml(ev.name)}</div>
+      <div class="event-detail-location"><i class="fas fa-map-pin" style="font-size:0.6rem;"></i> ${escapeHtml(ev.location || 'Online')} ${ev.meetingLink && ev.meetingLink.trim() !== "" ? `<a href="${ev.meetingLink}" target="_blank" style="color:#2563eb;font-size:0.7rem;">🔗 Join</a>` : ''}</div>
+      </div>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+// News
+const announcements = [
+  { id: 1, title: "MC 2025-018 Released", description: "New guidelines for CLUP formulation.", date: "2026-05-01", category: "announcement", badge: "Policy" },
+  { id: 2, title: "Online Portal Launch", description: "Integrated CLUP/ZO system live.", date: "2026-04-28", category: "announcement", badge: "System" },
+  { id: 3, title: "Regional Planning Workshop", description: "All LGUs invited.", date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), category: "announcement", badge: "Event" }
+];
+function getUpcomingEvents() { return activities.filter((a) => a.status === "upcoming").map((a) => ({ id: a.id, title: a.name, description: a.purpose, date: a.startDateTime, category: "event", badge: a.type })); }
+function getPastActivities() { return activities.filter((a) => a.status === "completed").slice(0,5).map((a) => ({ id: a.id, title: a.name, description: a.purpose, date: a.startDateTime, category: "past", badge: a.type })); }
+function formatNewsDate(dateStr) { const d = new Date(dateStr); if (isNaN(d)) return { day: "--", month: "--" }; return { day: d.getDate().toString(), month: d.toLocaleString("en", { month: "short" }) }; }
+function renderNewsAndActivities() {
+  let items = [];
+  const currentNewsTab = document.querySelector(".news-tab-btn.active")?.getAttribute("data-tab") || "announcements";
+  if (currentNewsTab === "announcements") items = announcements.map((a) => ({ ...a, formattedDate: formatNewsDate(a.date) }));
+  else if (currentNewsTab === "upcoming") items = getUpcomingEvents().map((e) => ({ ...e, formattedDate: formatNewsDate(e.date) }));
+  else items = getPastActivities().map((e) => ({ ...e, formattedDate: formatNewsDate(e.date) }));
+  const container = document.getElementById("newsListContainer");
+  if (!items.length) { container.innerHTML = "<div style='padding:1rem;text-align:center;color:#94a3b8;'>No items.</div>"; return; }
+  container.innerHTML = items.map((item) => `
+    <div class="news-card" onclick="handleNewsClick('${item.category}', ${item.id})">
+      <div class="news-date"><div class="day">${item.formattedDate.day}</div><div class="month">${item.formattedDate.month}</div></div>
+      <div>
+        <div class="news-title">${escapeHtml(item.title)}</div>
+        <div class="news-desc">${escapeHtml(item.description?.substring(0,80) || "")}</div>
+        ${item.badge ? `<span class="news-badge">${escapeHtml(item.badge)}</span>` : ""}
+      </div>
+    </div>
+  `).join("");
+}
+window.handleNewsClick = function (category, id) {
+  if (category === "announcement") {
+    const a = announcements.find((a) => a.id === id);
+    if (a) showToast("📢 " + a.title, a.description || "Info", "info");
+  } else {
+    const ev = activities.find((a) => a.id === id);
+    if (ev) {
+      const d = new Date(ev.startDateTime).toISOString().split("T")[0];
+      handleDateClick(d);
+      // switch to upcoming tab to show context
+      document.querySelectorAll(".news-tab-btn").forEach(b => b.classList.remove("active"));
+      document.querySelector(".news-tab-btn[data-tab='upcoming']")?.classList.add("active");
+      renderNewsAndActivities();
+    }
+  }
+};
+function setupNewsTabs() {
+  document.querySelectorAll(".news-tab-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".news-tab-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      renderNewsAndActivities();
+    });
+  });
+}
+
+// ============================================
+// ARTICLES
+// ============================================
+function setupArticles() {
+  const articles = [
+    { title: "GeoAnalyticsPH Beta Testing: Shaping the Future of Land Use Planning", date: "November 25, 2024", desc: "DOST-PHIVOLCS in collaboration with DHSUD..." },
+    { title: "Strengthening Disaster Preparedness: DHSUD Conducts GeoRiskPH Training", date: "November 20, 2024", desc: "Three-day training for Mountain Province LGU" },
+    { title: "Pagpangandam sa Katalagman: DHSUD Region VI Training", date: "November 14, 2024", desc: "Provincial government empowers LGUs with CLUP tools" }
+  ];
+  const grid = document.getElementById("articlesGrid");
+  grid.innerHTML = articles.map((a) => `
+    <div class="article-card" onclick="showToast('Read More', '${a.title}', 'info')">
+      <div class="article-date">${a.date}</div>
+      <div class="article-title">${a.title}</div>
+      <div class="article-desc">${a.desc}</div>
+      <div class="view-link">Read More →</div>
+    </div>
+  `).join("");
+}
+
+// ============================================
+// PLATFORM BADGES
+// ============================================
+document.addEventListener("DOMContentLoaded", function() {
+  document.querySelectorAll('.badge-pill').forEach(badge => {
+    badge.addEventListener('click', function(e) {
+      const url = this.getAttribute('data-url');
+      if (url) window.open(url, '_blank');
+    });
+  });
+});
+
+// ============================================
+// SCROLL REVEAL
+// ============================================
+function initScrollReveal() {
+  const revealElements = document.querySelectorAll('.scroll-reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('revealed'); observer.unobserve(entry.target); } });
+  }, { threshold: 0.15, rootMargin: "0px 0px -50px 0px" });
+  revealElements.forEach(el => observer.observe(el));
+}
+
+// ============================================
+// INIT
+// ============================================
+function init() {
+  checkSession();
+  renderMainNavigation();
+  renderUserMenu();
+  loadActivities();
+  setupNewsTabs();
+  setupArticles();
+  renderVideoGallery();
+  initScrollReveal();
+
+  document.getElementById("prevMonthWidget")?.addEventListener("click", () => { 
+    widgetCurrentDate.setMonth(widgetCurrentDate.getMonth() - 1); 
+    renderMiniCalendar(); 
+    // Keep the detail panel showing the same date if possible, or find first event
+    if (selectedDateForDetail) {
+      const events = getEventsForDate(selectedDateForDetail);
+      if (events.length > 0) {
+        updateEventDetailPanel(selectedDateForDetail);
+      } else {
+        // Find first date with events in this month
+        const year = widgetCurrentDate.getFullYear();
+        const month = widgetCurrentDate.getMonth();
+        const monthStr = `${year}-${String(month + 1).padStart(2, "0")}`;
+        const dates = activities
+          .map(a => new Date(a.startDateTime).toISOString().split("T")[0])
+          .filter(d => d.startsWith(monthStr))
+          .sort();
+        if (dates.length > 0) {
+          updateEventDetailPanel(dates[0]);
+        } else {
+          updateEventDetailPanel(null);
+        }
+      }
+    } else {
+      updateEventDetailPanel(null);
+    }
+  });
+  
+  document.getElementById("nextMonthWidget")?.addEventListener("click", () => { 
+    widgetCurrentDate.setMonth(widgetCurrentDate.getMonth() + 1); 
+    renderMiniCalendar();
+    // Keep the detail panel showing the same date if possible, or find first event
+    if (selectedDateForDetail) {
+      const events = getEventsForDate(selectedDateForDetail);
+      if (events.length > 0) {
+        updateEventDetailPanel(selectedDateForDetail);
+      } else {
+        // Find first date with events in this month
+        const year = widgetCurrentDate.getFullYear();
+        const month = widgetCurrentDate.getMonth();
+        const monthStr = `${year}-${String(month + 1).padStart(2, "0")}`;
+        const dates = activities
+          .map(a => new Date(a.startDateTime).toISOString().split("T")[0])
+          .filter(d => d.startsWith(monthStr))
+          .sort();
+        if (dates.length > 0) {
+          updateEventDetailPanel(dates[0]);
+        } else {
+          updateEventDetailPanel(null);
+        }
+      }
+    } else {
+      updateEventDetailPanel(null);
+    }
+  });
+
+  // Modal close on backdrop click
+  window.onclick = function (e) {
+    const loginModal = document.getElementById("loginModal");
+    if (e.target === loginModal) closeLoginModal();
+    const eventModal = document.getElementById("eventModal");
+    if (e.target === eventModal) eventModal.classList.remove("active");
+    const videoModal = document.getElementById("videoModal");
+    if (e.target === videoModal) closeVideoModal();
+  };
+
+  // Expose functions globally
+  window.openLoginModal = openLoginModal;
+  window.closeLoginModal = closeLoginModal;
+  window.openVideoModal = openVideoModal;
+  window.closeVideoModal = closeVideoModal;
+}
+
+// Attach login form handler
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("modalLoginForm");
+  if (form) form.addEventListener("submit", handleModalLogin);
+  init();
+  
+});
+</script>
+</body>
+</html>
