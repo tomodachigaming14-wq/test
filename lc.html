@@ -1,0 +1,4079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
+  <title>DHSUD VI | ELUPDD - Locational Clearance (Blue) with PRS92 Map Tool</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <style>
+    /* ===== BASE STYLES (from index.html) ===== */
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Inter", "Segoe UI", Roboto, sans-serif; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 1rem;
+      background: #f4f7fc;
+      position: relative;
+      scroll-behavior: smooth;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(ellipse at 20% 50%, rgba(26, 115, 232, 0.08) 0%, transparent 60%),
+                  radial-gradient(ellipse at 80% 50%, rgba(0, 200, 150, 0.06) 0%, transparent 60%),
+                  linear-gradient(145deg, #f0f4f8 0%, #e8edf3 100%);
+      z-index: 0;
+    }
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 16px;
+      position: relative;
+      z-index: 1;
+      width: 100%;
+    }
+
+    /* ===== ANIMATIONS (from index.html) ===== */
+    @keyframes fadeUp {
+      0% { opacity: 0; transform: translateY(25px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideInLeft {
+      0% { opacity: 0; transform: translateX(-40px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes slideInRight {
+      0% { opacity: 0; transform: translateX(40px); }
+      100% { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+      100% { transform: translateY(0px); }
+    }
+    .animate-fadeUp { animation: fadeUp 0.7s ease forwards; }
+    .animate-slideLeft { animation: slideInLeft 0.6s ease forwards; }
+    .animate-slideRight { animation: slideInRight 0.6s ease forwards; }
+
+    .scroll-reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.1), transform 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    }
+    .scroll-reveal.revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ===== HEADER / NAVIGATION (from index.html) ===== */
+    .app-header {
+      width: 100%;
+      max-width: 1280px;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      background: white;
+      padding: 0.5rem 1rem;
+      border-radius: 40px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+      position: relative;
+      z-index: 5;
+    }
+    .app-header .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .app-header .brand img {
+      height: 36px;
+      width: auto;
+      display: block;
+      border-radius: 8px;
+    }
+    .app-header .brand span {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #1e3a8a;
+      letter-spacing: -0.3px;
+    }
+    .app-header .brand small {
+      font-weight: 400;
+      font-size: 0.5rem;
+      color: #64748b;
+      display: block;
+      margin-top: -2px;
+      letter-spacing: 0.3px;
+    }
+
+    /* Navigation links - center */
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+      flex-wrap: wrap;
+      flex: 1;
+      justify-content: center;
+    }
+    .nav-links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 0.3rem 0.7rem;
+      border-radius: 30px;
+      font-weight: 600;
+      font-size: 0.7rem;
+      text-decoration: none;
+      color: #1e3a8a;
+      background: transparent;
+      transition: all 0.25s ease;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+    .nav-links a i { font-size: 0.7rem; }
+    .nav-links a:hover {
+      background: #dbeafe;
+      border-color: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12);
+    }
+    .nav-links a.active {
+      background: #1e3a8a;
+      color: white;
+      box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+    }
+    .nav-links a.active:hover {
+      background: #2563eb;
+    }
+
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    .dropbtn {
+      background: none;
+      border: none;
+      font-family: inherit;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 0.3rem 0.7rem;
+      border-radius: 30px;
+      font-weight: 600;
+      font-size: 0.7rem;
+      color: #1e3a8a;
+      background: transparent;
+      transition: all 0.25s ease;
+      border: 1px solid transparent;
+    }
+    .dropbtn:hover {
+      background: #dbeafe;
+      border-color: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12);
+    }
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background: white;
+      min-width: 200px;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+      border-radius: 16px;
+      z-index: 1000;
+      top: 34px;
+      left: 0;
+      border: 1px solid #eef2ff;
+      padding: 0.3rem 0;
+    }
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+    .dropdown-content a {
+      display: block;
+      padding: 0.5rem 1.2rem;
+      color: #1e293b;
+      font-size: 0.7rem;
+      text-decoration: none;
+      border: none;
+      background: none;
+      border-radius: 0;
+    }
+    .dropdown-content a:hover {
+      background: #eff6ff;
+    }
+    .dropdown-submenu {
+      position: relative;
+    }
+    .submenu-trigger {
+      background: none;
+      border: none;
+      width: 100%;
+      text-align: left;
+      padding: 0.5rem 1.2rem;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: #1e293b;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: inherit;
+    }
+    .submenu-trigger:hover { background: #eff6ff; }
+    .arrow-right { font-size: 0.7rem; margin-left: 1rem; }
+    .submenu-content {
+      display: none;
+      position: absolute;
+      left: 100%;
+      top: 0;
+      background: white;
+      min-width: 160px;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+      border-radius: 16px;
+      border: 1px solid #eef2ff;
+      z-index: 1001;
+      padding: 0.3rem 0;
+    }
+    .dropdown-submenu:hover .submenu-content {
+      display: block;
+    }
+    .submenu-content a { padding: 0.5rem 1.2rem; }
+    .dropbtn::after {
+      content: " ▾";
+      font-size: 0.55rem;
+      opacity: 0.6;
+    }
+    .dropdown:hover .dropbtn::after {
+      opacity: 1;
+    }
+
+    /* User menu - right side */
+    .user-menu-section {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #f1f5f9;
+      padding: 0.1rem 0.4rem 0.1rem 0.6rem;
+      border-radius: 60px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .user-menu:hover { background: #e2e8f0; }
+    .user-avatar {
+      width: 26px;
+      height: 26px;
+      background: #2563eb;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 0.65rem;
+    }
+    .user-name {
+      font-size: 0.65rem;
+      font-weight: 500;
+    }
+    .role-badge-header {
+      background: #e2e8f0;
+      padding: 0.05rem 0.4rem;
+      border-radius: 20px;
+      font-size: 0.5rem;
+      font-weight: 600;
+    }
+    .role-badge-header.admin { background: #dcfce7; color: #166534; }
+    .role-badge-header.staff { background: #dbeafe; color: #1e40af; }
+    .user-dropdown-menu {
+      position: absolute;
+      top: 36px;
+      right: 0;
+      background: white;
+      border-radius: 20px;
+      min-width: 170px;
+      box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.15);
+      border: 1px solid #eef2ff;
+      overflow: hidden;
+      display: none;
+      z-index: 200;
+    }
+    .user-dropdown-item {
+      padding: 0.6rem 1.2rem;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+      font-size: 0.75rem;
+    }
+    .user-dropdown-item:hover { background: #f8fafc; }
+    .login-prompt {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #f1f5f9;
+      padding: 0.15rem 0.7rem 0.15rem 0.9rem;
+      border-radius: 60px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 600;
+      font-size: 0.75rem;
+      color: #1e3a8a;
+    }
+    .login-prompt:hover {
+      background: #2563eb;
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    /* ===== TOAST NOTIFICATIONS (from index.html) ===== */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 999999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 400px;
+      width: 100%;
+      pointer-events: none;
+    }
+    .toast {
+      pointer-events: auto;
+      background: white;
+      border-radius: 16px;
+      padding: 1rem 1.5rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transform: translateX(120%);
+      animation: slideIn 0.5s ease forwards;
+      border-left: 5px solid #2563eb;
+      min-height: 60px;
+    }
+    .toast.hiding { animation: slideOut 0.4s ease forwards; }
+    .toast-success { border-left-color: #10b981; }
+    .toast-error { border-left-color: #ef4444; }
+    .toast-info { border-left-color: #2563eb; }
+    .toast-warning { border-left-color: #f59e0b; }
+
+    .toast-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .toast-success .toast-icon { background: #d1fae5; color: #059669; }
+    .toast-error .toast-icon { background: #fee2e2; color: #dc2626; }
+    .toast-info .toast-icon { background: #dbeafe; color: #2563eb; }
+    .toast-warning .toast-icon { background: #fef3c7; color: #d97706; }
+
+    .toast-content { flex: 1; }
+    .toast-title { font-weight: 700; font-size: 0.9rem; color: #0f172a; }
+    .toast-message { font-size: 0.8rem; color: #64748b; margin-top: 2px; }
+    .toast-close {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 1.2rem;
+      padding: 4px;
+      transition: color 0.3s ease;
+      flex-shrink: 0;
+    }
+    .toast-close:hover { color: #475569; }
+
+    @keyframes slideIn {
+      from { transform: translateX(120%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(120%); opacity: 0; }
+    }
+
+    /* ===== CARD (from index.html) ===== */
+    .card {
+      background: white;
+      border-radius: 28px;
+      margin: 0 0 1.5rem 0;
+      padding: 1.5rem;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      max-width: 1280px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 1rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      color: white;
+      box-shadow: 0 8px 24px rgba(26, 115, 232, 0.3);
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #1e3a8a;
+      letter-spacing: -0.5px;
+    }
+    .header h1 small {
+      display: block;
+      font-size: 0.6rem;
+      font-weight: 400;
+      color: #64748b;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    .header-badge {
+      background: rgba(0, 200, 150, 0.15);
+      border: 1px solid rgba(0, 200, 150, 0.2);
+      padding: 0.3rem 0.8rem;
+      border-radius: 40px;
+      color: #00c896;
+      font-size: 0.6rem;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Toggle / Subnav (from index.html) */
+    .toggle-container {
+      display: flex;
+      gap: 0;
+      margin-bottom: 1.5rem;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 2px solid #e2e8f0;
+      background: #f8fafc;
+    }
+    .toggle-btn {
+      flex: 1;
+      padding: 0.6rem 0.5rem;
+      border: none;
+      background: transparent;
+      font-weight: 700;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: #64748b;
+      position: relative;
+      font-family: "Inter", sans-serif;
+      text-align: center;
+    }
+    .toggle-btn i { margin-right: 6px; }
+    .toggle-btn.active {
+      background: #1e3a8a;
+      color: white;
+      box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+    }
+    .toggle-btn:not(.active):hover {
+      background: #e2e8f0;
+      color: #1e3a8a;
+    }
+    .toggle-btn:first-child { border-radius: 12px 0 0 12px; }
+    .toggle-btn:last-child { border-radius: 0 12px 12px 0; }
+
+    /* ===== Form Styles (from index.html) ===== */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem 1.5rem;
+    }
+    .full-width { grid-column: 1 / -1; }
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .field-group label {
+      font-weight: 700;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .field-group label i {
+      color: #2563eb;
+      font-size: 0.7rem;
+      width: 14px;
+    }
+    .field-group label .required {
+      color: #dc2626;
+      font-size: 0.5rem;
+    }
+    .field-group input, .field-group select, .field-group textarea {
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 0.6rem 0.9rem;
+      font-size: 0.85rem;
+      transition: all 0.25s ease;
+      outline: none;
+      width: 100%;
+      color: #0f172a;
+      font-weight: 400;
+      font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+    }
+    .field-group input:focus, .field-group select:focus, .field-group textarea:focus {
+      border-color: #2563eb;
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+    .field-group select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23475569' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.8rem center;
+      cursor: pointer;
+      color: #0f172a;
+      min-height: 44px;
+    }
+    .field-group select option {
+      background: #ffffff;
+      color: #0f172a;
+    }
+    .field-group textarea {
+      resize: vertical;
+      min-height: 50px;
+    }
+    .form-type { display: none; }
+    .form-type.active { display: block; }
+
+    /* ===== Buttons (from index.html) ===== */
+    .btn-submit {
+      background: linear-gradient(135deg, #2563eb, #1e3a8a);
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 60px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 6px rgba(37, 99, 235, 0.25);
+      position: relative;
+      overflow: hidden;
+      font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+    }
+    .btn-submit::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+      transition: left 0.6s ease;
+    }
+    .btn-submit:hover::before { left: 100%; }
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 15px rgba(37, 99, 235, 0.35);
+    }
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .btn-test {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      padding: 0.4rem 0.8rem;
+      border-radius: 40px;
+      color: #475569;
+      cursor: pointer;
+      font-size: 0.7rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      flex: 1;
+      font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+    }
+    .btn-test:hover {
+      background: #e2e8f0;
+      transform: translateY(-1px);
+    }
+    .btn-test i { margin-right: 4px; }
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .btn-view-all { background: #1e3a8a; border: 1px solid #1e3a8a; color: white; }
+    .btn-view-all:hover { background: #2563eb; border-color: #2563eb; }
+    .btn-chart { background: #059669; border: 1px solid #059669; color: white; }
+    .btn-chart:hover { background: #047857; border-color: #047857; }
+    .btn-sheet { background: #0f9d58; border: 1px solid #0f9d58; color: white; }
+    .btn-sheet:hover { background: #0b7e48; border-color: #0b7e48; }
+
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .btn-primary:hover { background: #1d4ed8; transform: translateY(-2px); }
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #1e293b;
+      border: none;
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .btn-secondary:hover { background: #cbd5e1; transform: translateY(-1px); }
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .btn-danger:hover { background: #b91c1c; transform: translateY(-1px); }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      border-top: 2px solid white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* ===== Status Message (from index.html) ===== */
+    .status-message {
+      margin-top: 1rem;
+      padding: 0.6rem 1rem;
+      border-radius: 14px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      color: #475569;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.3s ease;
+      font-size: 0.8rem;
+      min-height: 44px;
+    }
+    .status-message i { font-size: 0.9rem; color: #2563eb; flex-shrink: 0; }
+    .status-message.success { background: #f0fdf4; border-color: #86efac; color: #166534; }
+    .status-message.success i { color: #10b981; }
+    .status-message.error { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
+    .status-message.error i { color: #dc2626; }
+    .footer-note {
+      margin-top: 1rem;
+      font-size: 0.6rem;
+      color: #94a3b8;
+      text-align: center;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 0.8rem;
+      letter-spacing: 0.5px;
+    }
+
+    /* ===== Table Styles ===== */
+    .table-wrapper { overflow-x: auto; margin-top: 0.8rem; }
+    .cert-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    .cert-table th {
+      text-align: left;
+      padding: 0.7rem 0.6rem;
+      background: #f1f5f9;
+      color: #1e293b;
+      font-weight: 600;
+      border-bottom: 2px solid #e2e8f0;
+      font-size: 0.7rem;
+    }
+    .cert-table td {
+      padding: 0.7rem 0.6rem;
+      border-bottom: 1px solid #e2e8f0;
+      vertical-align: middle;
+    }
+    .cert-table tr:hover td { background: #f8fafc; }
+    .empty-row td { text-align: center; padding: 1.5rem 0; color: #94a3b8; }
+
+    .search-bar {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+      background: #f8fafc;
+      padding: 0.6rem 0.8rem;
+      border-radius: 16px;
+      align-items: center;
+    }
+    .search-bar input, .search-bar select {
+      padding: 0.4rem 0.7rem;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      outline: none;
+      background: white;
+      flex: 1;
+      min-width: 120px;
+    }
+    .search-bar input:focus, .search-bar select:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .action-btns { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+    .action-btn {
+      padding: 0.2rem 0.5rem;
+      border-radius: 30px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+    }
+    .action-btn.view { background: #e0f2fe; color: #0369a1; }
+    .action-btn.edit { background: #fef3c7; color: #b45309; }
+    .action-btn.print { background: #d1fae5; color: #065f46; }
+    .action-btn.delete { background: #fee2e2; color: #b91c1c; }
+    .status-dropdown {
+      padding: 0.2rem 0.5rem;
+      border-radius: 30px;
+      border: 1px solid #cbd5e1;
+      font-size: 0.7rem;
+      background: white;
+      cursor: pointer;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 20px;
+      font-size: 0.65rem;
+      font-weight: 600;
+    }
+    .status-badge.released { background: #d4edda; color: #155724; }
+
+    /* ===== Modal (from index.html) ===== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 99999;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+      animation: fadeIn 0.3s ease;
+    }
+    .modal-overlay.active { display: flex; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal-box {
+      background: white;
+      border-radius: 24px;
+      max-width: 800px;
+      width: 100%;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.2rem;
+      border-bottom: 1px solid #e2e8f0;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+    }
+    .modal-header h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1e3a8a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-header h2 i { color: #2563eb; }
+    .modal-header .close-btn {
+      background: #f1f5f9;
+      border: none;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #475569;
+    }
+    .modal-header .close-btn:hover {
+      background: #fee2e2;
+      color: #dc2626;
+      transform: rotate(90deg);
+    }
+    .modal-body {
+      padding: 1rem 1.2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .modal-body .form-grid { grid-template-columns: 1fr 1fr; }
+    .modal-footer {
+      padding: 0.8rem 1.2rem;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      background: #f8fafc;
+      border-radius: 0 0 24px 24px;
+    }
+    .modal-footer .btn-close-modal {
+      background: #2563eb;
+      border: none;
+      padding: 0.4rem 1.2rem;
+      border-radius: 40px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.8rem;
+    }
+    .modal-footer .btn-close-modal:hover {
+      background: #1d4ed8;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    /* ===== Login Modal (from index.html) ===== */
+    .login-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    }
+    .login-modal.active { display: flex; }
+    .login-modal-content {
+      background: white;
+      border-radius: 2.5rem;
+      max-width: 400px;
+      width: 92%;
+      overflow: hidden;
+      box-shadow: 0 30px 60px -20px rgba(0,0,0,0.4);
+      animation: fadeUp 0.3s ease;
+    }
+    .login-modal-brand {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+      padding: 1.5rem 1.2rem 1.2rem;
+      text-align: center;
+      color: white;
+      position: relative;
+    }
+    .login-modal-brand img {
+      width: 90px;
+      height: auto;
+      background: white;
+      border-radius: 14px;
+      padding: 8px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      display: inline-block;
+      margin-bottom: 0.4rem;
+    }
+    .login-modal-brand h3 { font-size: 1.2rem; font-weight: 800; margin-bottom: 0.1rem; }
+    .login-modal-brand p { font-size: 0.6rem; opacity: 0.85; }
+    .login-modal-close {
+      position: absolute;
+      top: 10px;
+      right: 14px;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: white;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: 0.2s;
+    }
+    .login-modal-close:hover { opacity: 1; transform: scale(1.1); }
+    .login-modal-body { padding: 1.2rem 1.2rem 0.8rem; }
+    .login-modal-body .input-group { margin-bottom: 0.8rem; }
+    .login-modal-body .input-group label {
+      display: block;
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #54708f;
+      margin-bottom: 0.2rem;
+      letter-spacing: 0.3px;
+    }
+    .login-modal-body .input-group input {
+      width: 100%;
+      padding: 0.6rem 1rem;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 1rem;
+      font-size: 0.8rem;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+    }
+    .login-modal-body .input-group input:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+    .login-submit-btn {
+      width: 100%;
+      padding: 0.6rem;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 1.2rem;
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .login-submit-btn:hover { background: #1d4ed8; transform: translateY(-1px); }
+    .login-submit-btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none; }
+    .login-modal-footer {
+      text-align: center;
+      font-size: 0.55rem;
+      color: #94a3b8;
+      padding: 0.3rem 0 0.8rem;
+      border-top: 1px solid #eef2ff;
+      margin: 0 1.2rem;
+    }
+
+    /* ===== Sync Status ===== */
+    .sync-status {
+      position: fixed;
+      bottom: 15px;
+      left: 15px;
+      background: white;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    /* ===== MAP TOOL STYLES ===== */
+    .map-popup-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+      padding: 0.5rem;
+    }
+    .map-popup-modal.active { display: flex; }
+    .map-popup-content {
+      background: white;
+      border-radius: 24px;
+      width: 95%;
+      max-width: 1400px;
+      height: 92vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .map-popup-header {
+      background: #1e3a8a;
+      color: white;
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .map-popup-header h3 { font-size: 0.9rem; }
+    .map-popup-header button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0 4px;
+    }
+    .map-popup-body {
+      padding: 10px;
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .map-container { flex: 3; min-width: 300px; }
+    #popupMap {
+      height: 100%;
+      min-height: 400px;
+      border-radius: 16px;
+      background: #eef2f0;
+    }
+    .survey-sidebar {
+      flex: 1;
+      min-width: 320px;
+      max-height: 60vh;
+      overflow-y: auto;
+      background: #f9fbfd;
+      border-radius: 16px;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+    }
+    .map-toolbar {
+      background: white;
+      border-radius: 14px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .toolbar-section {
+      padding: 8px 12px;
+      border-bottom: 1px solid #eef2ff;
+    }
+    .toolbar-section:last-child { border-bottom: none; }
+    .section-title {
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #64748b;
+      letter-spacing: 0.6px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .search-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+      position: relative;
+    }
+    .map-search-input {
+      flex: 1;
+      min-width: 140px;
+      padding: 6px 12px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 40px;
+      font-size: 0.75rem;
+      outline: none;
+    }
+    .map-search-input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .search-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 40px;
+      padding: 6px 14px;
+      font-weight: 600;
+      font-size: 0.7rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .saved-points-btn {
+      background: #10b981;
+      color: white;
+      border: none;
+      border-radius: 40px;
+      padding: 6px 14px;
+      font-size: 0.65rem;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 0;
+    }
+    .tool-btn {
+      padding: 6px 12px;
+      border-radius: 40px;
+      font-size: 0.65rem;
+      font-weight: 500;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      color: #334155;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .tool-btn:hover {
+      background: #f1f5f9;
+      transform: translateY(-1px);
+    }
+    .tool-btn.primary { background: #2563eb; border-color: #2563eb; color: white; }
+    .tool-btn.success { background: #10b981; border-color: #10b981; color: white; }
+    .tool-btn.danger { background: #ef4444; border-color: #ef4444; color: white; }
+    .tool-btn.outline { background: white; border-color: #cbd5e1; color: #475569; }
+    .tool-btn.measuring-active {
+      background: #f59e0b;
+      border-color: #f59e0b;
+      color: white;
+    }
+    .tool-btn.save-point-active {
+      background: #10b981;
+      border-color: #10b981;
+      color: white;
+    }
+    .map-type-group {
+      display: flex;
+      gap: 3px;
+      background: #f1f5f9;
+      padding: 3px;
+      border-radius: 48px;
+      width: fit-content;
+    }
+    .map-type-btn {
+      padding: 4px 14px;
+      border-radius: 40px;
+      font-size: 0.65rem;
+      font-weight: 500;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #64748b;
+    }
+    .map-type-btn.active {
+      background: white;
+      color: #2563eb;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    .measure-result {
+      background: #1e293b;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 40px;
+      font-size: 0.6rem;
+      font-weight: 500;
+      margin-top: 6px;
+    }
+    .coord-info {
+      margin: 8px 0;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .coord-info input {
+      font-size: 0.7rem;
+      padding: 4px 8px;
+      flex: 1;
+      min-width: 80px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+    }
+    .layer-panel {
+      background: #f8faff;
+      border-radius: 12px;
+      padding: 10px;
+      margin-top: 10px;
+    }
+    .legend-panel { margin-top: 6px; font-size: 0.6rem; }
+    .survey-panel {
+      background: #f8fafc;
+      border-radius: 18px;
+      padding: 0.8rem;
+      margin-top: 0.8rem;
+      border: 1px solid #e2e8f0;
+    }
+    .survey-panel h4 {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #1e3a8a;
+      margin-bottom: 0.6rem;
+      border-left: 3px solid #f59e0b;
+      padding-left: 0.6rem;
+    }
+    .dms-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .dms-row input, .dms-row select {
+      padding: 3px 5px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      font-size: 0.7rem;
+      width: 48px;
+    }
+    .bearing-table {
+      width: 100%;
+      font-size: 0.6rem;
+      border-collapse: collapse;
+    }
+    .bearing-table th, .bearing-table td {
+      border: 1px solid #cbd5e6;
+      padding: 4px 3px;
+      text-align: center;
+    }
+    .stat-box {
+      background: #eef2ff;
+      padding: 8px;
+      border-radius: 12px;
+      font-family: monospace;
+      font-size: 0.65rem;
+      margin-top: 6px;
+    }
+    .corner-points-list {
+      max-height: 120px;
+      overflow-y: auto;
+      font-size: 0.65rem;
+    }
+    .btn-sm {
+      background: #2c5a6e;
+      color: white;
+      border: none;
+      border-radius: 16px;
+      padding: 3px 10px;
+      font-size: 0.6rem;
+      cursor: pointer;
+    }
+    .search-results-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1000;
+      margin-top: 3px;
+      display: none;
+    }
+    .search-results-dropdown.active { display: block; }
+    .search-result-item {
+      padding: 8px 12px;
+      border-bottom: 1px solid #eef2ff;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .search-result-item:hover { background: #eff6ff; }
+    .search-result-title {
+      font-weight: 600;
+      color: #1e3a8a;
+      font-size: 0.75rem;
+    }
+    .search-result-subtitle {
+      font-size: 0.6rem;
+      color: #64748b;
+      margin-top: 1px;
+    }
+    .search-type-badge {
+      display: inline-block;
+      font-size: 0.5rem;
+      padding: 1px 5px;
+      border-radius: 10px;
+      margin-left: 4px;
+      background: #e2e8f0;
+      color: #475569;
+    }
+    .search-type-badge.saved-point { background: #dcfce7; color: #166534; }
+    .search-type-badge.address { background: #dbeafe; color: #1e40af; }
+    .custom-marker {
+      background: transparent !important;
+      border: none !important;
+    }
+    .custom-marker div {
+      background: #dc2626;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+      cursor: pointer;
+    }
+    .map-popup-footer {
+      padding: 10px 16px;
+      text-align: right;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    /* ===== Enhanced Map Button ===== */
+    .btn-map-enhanced {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+      color: white;
+      padding: 0.7rem 1.2rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      letter-spacing: 0.5px;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-map-enhanced::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s ease;
+    }
+    .btn-map-enhanced:hover::before { left: 100%; }
+    .btn-map-enhanced:hover {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 15px rgba(37, 99, 235, 0.3);
+    }
+    .btn-map-enhanced:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .btn-map-enhanced i, .btn-map-enhanced span { position: relative; z-index: 1; }
+    .btn-map-enhanced .map-icon { font-size: 1rem; }
+
+    /* ===== Number Editor Panel ===== */
+    .number-editor-panel {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 10px 14px;
+      margin-bottom: 1.2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-end;
+    }
+    .number-editor-group {
+      flex: 1;
+      min-width: 180px;
+    }
+    .number-editor-group label {
+      display: block;
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: #54708f;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+    .number-editor-input {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .number-editor-input input {
+      padding: 6px 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-family: monospace;
+      width: 50px;
+    }
+    .number-editor-input input:focus {
+      border-color: #2563eb;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+    }
+    .number-editor-input .prefix {
+      font-weight: 700;
+      color: #1e3a8a;
+      background: #e2e8f0;
+      padding: 5px 10px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+    }
+    .number-preview {
+      font-size: 0.7rem;
+      color: #64748b;
+      margin-top: 4px;
+      font-family: monospace;
+    }
+
+    /* ===== Latest Numbers Panel ===== */
+    .latest-numbers-panel {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+      border-radius: 14px;
+      padding: 12px 16px;
+      margin-bottom: 1.2rem;
+      color: white;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .latest-number-card {
+      background: rgba(255,255,255,0.15);
+      border-radius: 10px;
+      padding: 8px 12px;
+      flex: 1;
+      min-width: 160px;
+      backdrop-filter: blur(10px);
+    }
+    .latest-number-card label {
+      display: block;
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      opacity: 0.8;
+      margin-bottom: 3px;
+    }
+    .latest-number-card .number-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      font-family: monospace;
+      letter-spacing: 1px;
+    }
+    .latest-number-card .number-hint {
+      font-size: 0.55rem;
+      opacity: 0.7;
+      margin-top: 3px;
+    }
+    .current-month-badge {
+      background: #f59e0b;
+      color: #1e293b;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+    .btn-refresh-numbers {
+      background: white;
+      color: #1e3a8a;
+      border: none;
+      border-radius: 40px;
+      padding: 6px 16px;
+      font-weight: 600;
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 6px;
+    }
+    .btn-refresh-numbers:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    /* ===== Print Styles ===== */
+    @media print {
+      .no-print, header, footer, .app-header, .nav-links, .toggle-container, .search-bar, .action-btns, .btn, .sync-status, .user-menu, .login-prompt {
+        display: none !important;
+      }
+      .print-decision-document {
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 1.5cm;
+        font-size: 11pt;
+        line-height: 1.4;
+      }
+      .print-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+      .print-header h1 { font-size: 14pt; margin: 5px 0; }
+      .print-header h2 { font-size: 12pt; margin: 3px 0; }
+      .print-header h3 { font-size: 11pt; margin: 3px 0; font-weight: normal; }
+      .print-title { text-align: center; font-size: 16pt; font-weight: bold; text-decoration: underline; margin: 15px 0; }
+      .print-decision { font-size: 14pt; font-weight: bold; text-align: center; margin: 20px 0; background: #f0f0f0; padding: 8px; }
+      .print-info-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+      .print-info-table td, .print-info-table th { border: 1px solid #000; padding: 8px; vertical-align: top; }
+      .print-info-table th { background: #f5f5f5; text-align: left; width: 30%; }
+      .print-conditions { margin-top: 80px; border-top: 1px solid #000; padding-top: 10px; }
+      .print-conditions h4 { font-weight: bold; margin: 10px 0 5px 0; }
+      .print-conditions ul { margin: 5px 0; padding-left: 20px; }
+      .print-footer { margin-top: 30px; text-align: right; border-top: 1px solid #000; padding-top: 15px; }
+      .print-signature { margin-top: 15px; text-align: right; }
+      .page-break { page-break-before: always; }
+    }
+    .btn-print-enhanced {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: white;
+      padding: 0.4rem 1rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    }
+    .btn-print-enhanced:hover {
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+      transform: translateY(-1px);
+    }
+
+    /* ===== FOOTER (from index.html) ===== */
+    .footer-new {
+      background: #0a2540;
+      color: #b9d0e7;
+      padding: 1.5rem 0;
+      margin-top: 2rem;
+      border-top: 1px solid #2d4f6e;
+      width: 100%;
+    }
+    .footer-grid {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    .social-icons i {
+      font-size: 1.4rem;
+      margin-right: 0.6rem;
+      color: white;
+      transition: 0.2s;
+      cursor: pointer;
+    }
+    .social-icons i:hover {
+      transform: translateY(-4px);
+      color: #3b82f6;
+    }
+    .footer-new .logo-image {
+      height: 34px;
+      width: auto;
+      filter: brightness(0) invert(1);
+      margin-bottom: 8px;
+    }
+    .footer-new .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    /* ===== Responsive (from index.html) ===== */
+    @media (max-width: 1024px) {
+      .app-header { flex-wrap: wrap; gap: 0.4rem; padding: 0.5rem 0.8rem; }
+      .nav-links { flex: 1 1 100%; justify-content: center; order: 2; gap: 0.15rem; }
+      .user-menu-section { order: 3; justify-content: center; width: 100%; margin-left: 0; }
+      .brand { order: 1; }
+    }
+    @media (max-width: 800px) {
+      .app-header { flex-direction: column; align-items: stretch; padding: 0.5rem 0.8rem; }
+      .nav-links { flex-wrap: wrap; justify-content: center; order: 2; gap: 0.1rem; }
+      .user-menu-section { justify-content: center; margin-top: 0.2rem; order: 3; width: 100%; }
+      .brand { order: 1; justify-content: center; }
+      .card { padding: 1rem; border-radius: 20px; }
+      .form-grid { grid-template-columns: 1fr; gap: 0.7rem; }
+      .full-width { grid-column: 1; }
+      .header h1 { font-size: 1.1rem; }
+      .header-icon { width: 38px; height: 38px; font-size: 1.1rem; }
+      .header-badge { display: none; }
+      .btn-group { flex-direction: column; }
+      .toggle-btn { font-size: 0.65rem; padding: 0.5rem 0.3rem; }
+      .modal-box { max-width: 100%; margin: 0.5rem; }
+      .modal-body .form-grid { grid-template-columns: 1fr; }
+      .map-popup-body { flex-direction: column; }
+      .map-container { min-width: unset; }
+      .survey-sidebar { min-width: unset; max-height: 50vh; }
+      .latest-numbers-panel { flex-direction: column; align-items: stretch; }
+      .latest-number-card { min-width: unset; }
+      .number-editor-panel { flex-direction: column; }
+      .number-editor-group { min-width: unset; }
+      .number-editor-input { flex-wrap: wrap; }
+      .brand span { font-size: 0.85rem; }
+      .brand img { height: 30px; }
+      .nav-links a, .dropbtn { font-size: 0.6rem; padding: 0.2rem 0.5rem; }
+    }
+    @media (max-width: 500px) {
+      .container { padding: 0 8px; }
+      .card { padding: 0.8rem; margin: 0.5rem 0; }
+      .field-group input, .field-group select, .field-group textarea { padding: 0.5rem 0.7rem; font-size: 0.8rem; }
+      .cert-table { font-size: 0.7rem; }
+      .cert-table th, .cert-table td { padding: 0.4rem 0.3rem; }
+      .search-bar input, .search-bar select { font-size: 0.65rem; padding: 0.3rem 0.5rem; min-width: 80px; }
+      .btn-submit { font-size: 0.8rem; padding: 0.6rem 1rem; }
+      .map-search-input { min-width: 100px; font-size: 0.65rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ===== HEADER (from index.html) ===== -->
+<div class="app-header">
+  <div class="brand">
+    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' fill='%231e3a8a'/%3E%3Ctext x='12' y='48' font-size='32' fill='white' font-weight='bold'%3EDH%3C/text%3E%3C/svg%3E" alt="DHSUD Logo" />
+    <div>
+      <span>DHSUD VI - ELUPDD</span>
+      <small>CLUP & ZO Integrated System</small>
+    </div>
+  </div>
+  <div class="nav-links" id="mainNavContainer">
+    <!-- Dynamically rendered -->
+  </div>
+  <div class="user-menu-section" id="userMenuContainer">
+    <!-- Dynamically rendered -->
+  </div>
+</div>
+
+<main>
+  <div class="container">
+    <!-- ===== MAIN CARD ===== -->
+    <div class="card" id="mainCard">
+      <div class="header">
+        <div class="header-left">
+          <div class="header-icon"><i class="fas fa-file-signature"></i></div>
+          <div>
+            <h1>
+              Locational Clearance
+              <small>Decision on Zoning - Blue Form</small>
+            </h1>
+          </div>
+        </div>
+        <div class="header-badge">
+          <i class="fas fa-circle" style="font-size: 0.4rem; color: #00c896;"></i>
+          <span>Live</span>
+        </div>
+      </div>
+
+      <!-- Toggle / Subnav -->
+      <div class="toggle-container no-print">
+        <button class="toggle-btn active" id="toggleDataEntry"><i class="fas fa-pen"></i> Data Entry</button>
+        <button class="toggle-btn" id="toggleStatus"><i class="fas fa-clipboard-list"></i> Status Tracking</button>
+        <button class="toggle-btn" id="toggleAccomplishment"><i class="fas fa-check-circle"></i> Accomplishment</button>
+      </div>
+
+      <!-- ===== DATA ENTRY VIEW ===== -->
+      <div class="form-type active" id="dataEntryView">
+        <form id="locationalForm" onsubmit="return saveLocationalRecord(event)">
+
+          <!-- Latest Numbers Display Panel -->
+          <div class="latest-numbers-panel">
+            <div class="latest-number-card">
+              <label><i class="fas fa-hashtag"></i> LATEST APPLICATION NO.</label>
+              <div class="number-value" id="latestAppNoDisplay">ELUPDD-06-26-001</div>
+              <div class="number-hint">Auto-generated based on current month</div>
+            </div>
+            <div class="latest-number-card">
+              <label><i class="fas fa-gavel"></i> LATEST DECISION NO.</label>
+              <div class="number-value" id="latestDecNoDisplay">LC-06-26-001</div>
+              <div class="number-hint">Auto-generated based on current month</div>
+            </div>
+            <div>
+              <div class="current-month-badge" id="currentMonthBadge"><i class="fas fa-calendar-alt"></i> Current: June 2026</div>
+              <button type="button" class="btn-refresh-numbers" onclick="refreshLatestNumbersDisplay()"><i class="fas fa-sync-alt"></i> Refresh Numbers</button>
+            </div>
+          </div>
+
+          <!-- Number Editor Panel -->
+          <div class="number-editor-panel">
+            <div class="number-editor-group">
+              <label><i class="fas fa-hashtag"></i> Application No. (ELUPDD)</label>
+              <div class="number-editor-input">
+                <span class="prefix">ELUPDD-</span>
+                <input type="text" id="appMonth" placeholder="MM" maxlength="2" size="3" style="width: 48px;">
+                <span>-</span>
+                <input type="text" id="appYear" placeholder="YY" maxlength="2" size="3" style="width: 48px;">
+                <span>-</span>
+                <input type="text" id="appSeq" placeholder="NNN" maxlength="3" size="4" style="width: 60px;">
+              </div>
+              <div class="number-preview" id="appPreview">Full: ELUPDD-MM-YY-NNN</div>
+            </div>
+            <div class="number-editor-group">
+              <label><i class="fas fa-gavel"></i> Decision No. (LC)</label>
+              <div class="number-editor-input">
+                <span class="prefix">LC-</span>
+                <input type="text" id="decMonth" placeholder="MM" maxlength="2" size="3" style="width: 48px;">
+                <span>-</span>
+                <input type="text" id="decYear" placeholder="YY" maxlength="2" size="3" style="width: 48px;">
+                <span>-</span>
+                <input type="text" id="decSeq" placeholder="NNN" maxlength="3" size="4" style="width: 60px;">
+              </div>
+              <div class="number-preview" id="decPreview">Full: LC-MM-YY-NNN</div>
+            </div>
+          </div>
+
+          <input type="hidden" id="locAppNo">
+          <input type="hidden" id="locDecisionNo">
+
+          <div class="form-grid">
+            <div class="field-group"><label><i class="fas fa-calendar-alt"></i> Date of Receipt <span class="required">*</span></label><input type="date" id="locDateReceipt" required></div>
+            <div class="field-group"><label><i class="fas fa-calendar-check"></i> Date of Issue <span class="required">*</span></label><input type="date" id="locDateIssue" required></div>
+            <div class="field-group"><label><i class="fas fa-user"></i> Applicant Name <span class="required">*</span></label><input type="text" id="locApplicant" placeholder="Full name of applicant" required></div>
+            <div class="field-group"><label><i class="fas fa-building"></i> Name of Corporation</label><input type="text" id="locCorporation" placeholder="If applicable"></div>
+            <div class="field-group"><label><i class="fas fa-home"></i> Applicant Address <span class="required">*</span></label><input type="text" id="locApplicantAddress" placeholder="Complete address" required></div>
+            <div class="field-group"><label><i class="fas fa-building"></i> Corporation Address</label><input type="text" id="locCorpAddress" placeholder="If applicable"></div>
+            <div class="field-group"><label><i class="fas fa-project-diagram"></i> Type of Project <span class="required">*</span></label><input type="text" id="locProjectType" placeholder="e.g., Residential, Commercial" required></div>
+
+            <!-- Area and Location -->
+            <div class="field-group full-width">
+              <label><i class="fas fa-map-marked-alt"></i> Area and Location <span class="required">*</span></label>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                  <div style="flex: 1;">
+                    <label style="font-size: 0.65rem; color: #54708f;">Lot Area (sq.m.)</label>
+                    <input type="number" id="locLotArea" placeholder="e.g., 5000" step="any">
+                  </div>
+                  <div style="flex: 1;">
+                    <label style="font-size: 0.65rem; color: #54708f;">Floor Area (sq.m.)</label>
+                    <input type="number" id="locFloorArea" placeholder="e.g., 200" step="any">
+                  </div>
+                </div>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                  <div style="flex: 1;">
+                    <label style="font-size: 0.65rem; color: #54708f;">Province</label>
+                    <select id="locProvince">
+                      <option value="">-- Select Province --</option>
+                      <option value="Aklan">Aklan</option>
+                      <option value="Antique">Antique</option>
+                      <option value="Capiz">Capiz</option>
+                      <option value="Guimaras">Guimaras</option>
+                      <option value="Iloilo">Iloilo</option>
+                      <option value="Negros Occidental">Negros Occidental</option>
+                    </select>
+                  </div>
+                  <div style="flex: 1;">
+                    <label style="font-size: 0.65rem; color: #54708f;">City / Municipality</label>
+                    <select id="locCity">
+                      <option value="">-- Select City/Municipality --</option>
+                    </select>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                  <div style="flex: 1;">
+                    <label style="font-size: 0.65rem; color: #54708f;">Barangay</label>
+                    <input type="text" id="locBarangay" placeholder="Type barangay name">
+                  </div>
+                </div>
+              </div>
+              <button type="button" class="btn-map-enhanced" onclick="openSurveyMapPopup()" style="margin-top: 8px;">
+                <i class="fas fa-map-marked-alt map-icon"></i> Open PRS92 Map Tool
+              </button>
+            </div>
+
+            <input type="hidden" id="locAreaLocation">
+
+            <div class="field-group"><label><i class="fas fa-gavel"></i> Decision <span class="required">*</span></label>
+              <select id="locDecision" required>
+                <option value="">-- Select --</option>
+                <option value="Approved">Locational Clearance Granted</option>
+                <option value="Approved with Conditions">Approved with Conditions</option>
+                <option value="Disapproved">Disapproved</option>
+              </select>
+            </div>
+            <div class="field-group"><label><i class="fas fa-landmark"></i> Right over Land <span class="required">*</span></label><input type="text" id="locRightOverLand" placeholder="e.g., Owner, Lessee" required></div>
+            <div class="field-group full-width"><label><i class="fas fa-list"></i> Conditions</label><textarea id="locConditions" rows="4" placeholder="List all conditions..."></textarea></div>
+          </div>
+
+          <h4 style="margin: 1.2rem 0 0.5rem; color: #1e3a8a; font-size: 0.9rem;"><i class="fas fa-receipt"></i> Payment Details</h4>
+          <div class="form-grid">
+            <div class="field-group"><label><i class="fas fa-file-invoice"></i> O.R. No.</label><input type="text" id="locOrNo" placeholder="Official Receipt number"></div>
+            <div class="field-group"><label><i class="fas fa-money-bill-wave"></i> Amount Paid (₱) <span class="required">*</span></label><input type="text" id="locAmountPaid" placeholder="0.00" required></div>
+            <div class="field-group"><label><i class="fas fa-calendar-day"></i> O.R. Date</label><input type="date" id="locOrDate"></div>
+          </div>
+
+          <div style="display:flex; gap:0.8rem; margin-top:1.2rem; justify-content: center; flex-wrap: wrap;">
+            <button type="submit" class="btn-submit" style="width: auto; padding: 0.7rem 2rem;"><i class="fas fa-save"></i> Save Locational Clearance</button>
+            <button type="button" class="btn-test" onclick="clearForm()" style="flex: none; padding: 0.7rem 1.5rem; background: #e2e8f0;"><i class="fas fa-undo-alt"></i> Clear Form</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- ===== STATUS VIEW ===== -->
+      <div class="form-type" id="statusView">
+        <div class="search-bar">
+          <input type="text" id="statusSearch" placeholder="🔍 Search by Application No. or Applicant" onkeyup="refreshStatusTable()">
+          <select id="statusFilter" onchange="refreshStatusTable()">
+            <option value="">All Status (except Released)</option>
+            <option value="For Review">For Review</option>
+            <option value="For RD Signature">For RD Signature</option>
+            <option value="For Release">For Release</option>
+          </select>
+          <button class="btn-test" onclick="clearStatusSearch()"><i class="fas fa-eraser"></i> Clear</button>
+        </div>
+        <div class="table-wrapper">
+          <table class="cert-table">
+            <thead><tr><th>Application No.</th><th>Decision No.</th><th>Applicant</th><th>Project Type</th><th>Date of Issue</th><th>Decision</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="statusTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== ACCOMPLISHMENT VIEW ===== -->
+      <div class="form-type" id="accomplishmentView">
+        <div class="search-bar">
+          <input type="text" id="accSearch" placeholder="🔍 Search..." onkeyup="refreshAccTable()">
+          <button class="btn-test" onclick="clearAccSearch()"><i class="fas fa-eraser"></i> Clear</button>
+          <button class="btn-test btn-sheet" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> Export Excel</button>
+          <button class="btn-test btn-view-all" onclick="manualRefresh()"><i class="fas fa-sync-alt"></i> Refresh from Sheets</button>
+        </div>
+        <div class="table-wrapper">
+          <table class="cert-table">
+            <thead><tr><th>Application No.</th><th>Decision No.</th><th>Applicant</th><th>Project Type</th><th>Date of Issue</th><th>Decision</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="accTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="status-message" id="statusMessage">
+        <i class="fas fa-info-circle"></i>
+        <span id="statusText">Ready · Fill in all required fields</span>
+      </div>
+
+      <div class="footer-note">
+        <i class="fas fa-database"></i> Data saved directly to Google Sheets via Apps Script
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ===== FOOTER (from index.html) ===== -->
+<footer class="footer-new">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' fill='%23ffffff'/%3E%3Ctext x='12' y='48' font-size='32' fill='%231e3a8a' font-weight='bold'%3EDH%3C/text%3E%3C/svg%3E" alt="logo" class="logo-image" /><br />
+        <strong>DHSUD Region VI</strong><br />ELUPDD – CLUP & ZO Platform<br />Geospatial Innovation for Resilience
+      </div>
+      <div>
+        <strong>Our Social Networks</strong><br />Follow us for updates<br />
+        <div class="social-icons">
+          <a href="https://web.facebook.com/DHSUDR6" target="_blank" rel="noopener noreferrer"><i class="fab fa-facebook"></i></a>
+          <i class="fab fa-instagram"></i><i class="fab fa-twitter"></i>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center; margin-top:1.2rem; border-top:1px solid #2d4f6e; padding-top:0.8rem; font-size:0.7rem;">© 2026 DHSUD VI — ELUPDD</div>
+  </div>
+</footer>
+
+<!-- ===== MAP TOOL MODAL ===== -->
+<div id="mapPopupModal" class="map-popup-modal">
+  <div class="map-popup-content">
+    <div class="map-popup-header">
+      <h3><i class="fas fa-map-marked-alt"></i> MAP TOOL - PRS92 Survey & Zoning Map</h3>
+      <button onclick="closeMapPopup()">&times;</button>
+    </div>
+    <div class="map-popup-body">
+      <div class="map-container">
+        <div id="popupMap" style="height: 100%; min-height: 400px;"></div>
+      </div>
+      <div class="survey-sidebar">
+        <!-- TOOLBAR -->
+        <div class="map-toolbar">
+          <div class="toolbar-section">
+            <div class="section-title"><span>🔍</span> SEARCH & NAVIGATION</div>
+            <div class="search-row" style="position: relative;">
+              <input type="text" id="mapSearchInput" class="map-search-input" placeholder="Search address, place, or saved point..." autocomplete="off">
+              <button class="search-btn" onclick="searchMapLocation()"><i class="fas fa-search"></i> Search</button>
+              <button class="saved-points-btn" onclick="showSavedPointsList()"><i class="fas fa-map-pin"></i> My Saved Points</button>
+              <div id="searchResultsDropdown" class="search-results-dropdown"></div>
+            </div>
+          </div>
+          <div class="toolbar-section">
+            <div class="section-title"><span>📐</span> MEASUREMENT TOOLS</div>
+            <div class="button-group">
+              <button class="tool-btn" id="startMeasureLineBtn"><i class="fas fa-ruler"></i> Measure Distance</button>
+              <button class="tool-btn" id="startMeasureAreaBtn"><i class="fas fa-ruler-combined"></i> Measure Area</button>
+              <button class="tool-btn outline" id="clearMeasureBtn"><i class="fas fa-trash-alt"></i> Clear</button>
+            </div>
+            <div class="measure-result" id="measureResult">⚡ Click a button to start measuring</div>
+          </div>
+          <div class="toolbar-section">
+            <div class="section-title"><span>🗺️</span> MAP VIEW</div>
+            <div class="map-type-group">
+              <button class="map-type-btn active" onclick="changeMapView('street')" id="mapTypeStreet"><i class="fas fa-road"></i> Street</button>
+              <button class="map-type-btn" onclick="changeMapView('satellite')" id="mapTypeSatellite"><i class="fas fa-satellite"></i> Satellite</button>
+              <button class="map-type-btn" onclick="changeMapView('outdoor')" id="mapTypeOutdoor"><i class="fas fa-mountain"></i> Terrain</button>
+            </div>
+          </div>
+          <div class="toolbar-section">
+            <div class="section-title"><span>📍</span> SAVED POINTS</div>
+            <div class="button-group">
+              <button class="tool-btn" id="toggleSavePointBtn"><i class="fas fa-save"></i> Save Point Mode: OFF</button>
+              <button class="tool-btn success" onclick="loadSavedPoints()"><i class="fas fa-download"></i> Load All Points</button>
+            </div>
+            <div style="margin-top: 6px;">
+              <small style="color: #64748b; font-size: 0.55rem;" id="savePointHint">💡 Toggle ON to save points by clicking on the map</small>
+            </div>
+          </div>
+        </div>
+        <!-- COORDINATES -->
+        <div class="coord-info">
+          <input type="text" id="popupLatitude" placeholder="Latitude" class="form-control" readonly style="flex: 1;">
+          <input type="text" id="popupLongitude" placeholder="Longitude" class="form-control" readonly style="flex: 1;">
+          <button class="btn-sm" onclick="clearSelectedCoords()" style="background:#dc3545; color:white;"><i class="fas fa-times"></i> Clear</button>
+        </div>
+        <!-- LAYER PANEL -->
+        <div class="layer-panel">
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <input type="file" id="geojsonFileInput" accept=".geojson,.json" style="display: none;">
+            <button class="btn-sm" onclick="document.getElementById('geojsonFileInput').click()" style="background:#2563eb;"><i class="fas fa-upload"></i> Upload GeoJSON</button>
+            <button class="btn-sm" onclick="clearAllLayers()" style="background:#dc3545;"><i class="fas fa-trash-alt"></i> Clear Layers</button>
+          </div>
+          <div id="attributeSelector" style="display: none; margin-top: 6px;">
+            <select id="attributeColumnSelect" onchange="updateCategoryFilterFromAttribute()" style="padding:3px; font-size:0.6rem; width:100%;"></select>
+            <button class="btn-sm" onclick="resetLayerColors()" style="margin-top:4px;"><i class="fas fa-palette"></i> Reset Colors</button>
+          </div>
+          <div id="legendPanel" class="legend-panel"><strong>Legend:</strong> Upload GeoJSON to categorize</div>
+          <div id="layerListContainer" style="margin-top: 6px; font-size: 0.6rem;"></div>
+        </div>
+        <!-- SURVEY PANEL -->
+        <div class="survey-panel">
+          <h4>📍 Corner 1 (Tie Point) - DMS (PRS92 Zone 4)</h4>
+          <div class="dms-row">
+            <div><label>Lat:</label><br/><input type="number" id="popupLatDeg" value="10" style="width:45px"/>° <input type="number" id="popupLatMin" value="48" style="width:45px"/>' <input type="number" id="popupLatSec" value="7.4" step="0.001" style="width:50px"/>" <select id="popupLatHem" style="width:45px;"><option value="N">N</option><option value="S">S</option></select></div>
+            <div><label>Lon:</label><br/><input type="number" id="popupLonDeg" value="123" style="width:45px"/>° <input type="number" id="popupLonMin" value="25" style="width:45px"/>' <input type="number" id="popupLonSec" value="34.1" step="0.001" style="width:50px"/>" <select id="popupLonHem" style="width:45px;"><option value="E">E</option><option value="W">W</option></select></div>
+          </div>
+          <button class="btn-sm" id="updateSurveyFromDMSBtn" style="background: #e67e22; width: 100%; margin-bottom: 8px;"><i class="fas fa-sync-alt"></i> Update Corner 1 & Recompute</button>
+          <div id="popupPrs92Display" class="stat-box">📍 PRS92 Corner 1: Loading...</div>
+        </div>
+        <div class="survey-panel">
+          <h4>📐 Bearing / Distance Table (Traverse)</h4>
+          <div style="overflow-x: auto">
+            <table id="popupBearingTable" class="bearing-table">
+              <thead><tr><th>Leg</th><th>From→To</th><th>Bearing (Quadrant)</th><th>Dist(m)</th><th>ΔE</th><th>ΔN</th><th></th></tr></thead>
+              <tbody id="popupTableBody"></tbody>
+            </table>
+          </div>
+          <div style="display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap">
+            <button class="btn-sm" id="popupAddRowBtn"><i class="fas fa-plus"></i> Add Leg</button>
+            <button class="btn-sm" id="popupApplyEditsBtn" style="background: #e67e22"><i class="fas fa-check"></i> Apply Edits</button>
+            <button class="btn-sm" id="popupResetTableBtn" style="background:#dc3545; color:white;"><i class="fas fa-trash-alt"></i> Remove All Legs</button>
+          </div>
+        </div>
+        <div class="survey-panel">
+          <h4>📊 Closure Analysis</h4>
+          <div id="popupClosureStats" class="stat-box">Calculating...</div>
+        </div>
+        <div class="survey-panel">
+          <h4>📍 All Corner Points (PRS92)</h4>
+          <div id="popupCornerPointsList" class="corner-points-list"></div>
+          <div style="margin-top: 8px; display: flex; gap: 4px; flex-wrap: wrap;">
+            <button class="btn-sm" id="popupExportGeoJSONBtn"><i class="fas fa-download"></i> Export GeoJSON</button>
+            <button class="btn-sm" id="popupExportShapefileBtn"><i class="fas fa-file-archive"></i> Export Shapefile (ZIP)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="map-popup-footer">
+      <button class="btn-primary" onclick="saveCoordinatesFromPopup()" style="padding: 0.4rem 1rem; font-size:0.75rem;"><i class="fas fa-check"></i> Use Selected Coordinates for Clearance</button>
+      <button class="btn-secondary" onclick="closeMapPopup()" style="padding: 0.4rem 1rem; font-size:0.75rem;"><i class="fas fa-times"></i> Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DATA MODAL ===== -->
+<div class="modal-overlay" id="dataModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="modalTitle"><i class="fas fa-file-alt"></i> Record Details</h2>
+      <button class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn-close-modal" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LOGIN MODAL (from index.html) ===== -->
+<div id="loginModal" class="login-modal">
+  <div class="login-modal-content">
+    <div class="login-modal-brand">
+      <button class="login-modal-close" onclick="closeLoginModal()">&times;</button>
+      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' fill='%23ffffff'/%3E%3Ctext x='12' y='48' font-size='32' fill='%231e3a8a' font-weight='bold'%3EDH%3C/text%3E%3C/svg%3E" alt="DHSUD Logo" />
+      <h3>DHSUD Region VI</h3>
+      <p>ELUPDD · CLUP & ZO Platform</p>
+    </div>
+    <div class="login-modal-body">
+      <form id="modalLoginForm">
+        <div class="input-group">
+          <label><i class="fas fa-envelope"></i> Email Address</label>
+          <input type="email" id="modalLoginEmail" placeholder="name@dhsud.gov.ph" required />
+        </div>
+        <div class="input-group">
+          <label><i class="fas fa-lock"></i> Password</label>
+          <input type="password" id="modalLoginPassword" placeholder="Enter your password" required />
+        </div>
+        <button type="submit" class="login-submit-btn" id="loginModalBtn">→ Sign In</button>
+      </form>
+    </div>
+    <div class="login-modal-footer">🔐 Role-Based Access: Admin | Staff/Officer</div>
+  </div>
+</div>
+
+<!-- ===== SYNC STATUS ===== -->
+<div id="syncStatus" class="sync-status">
+  <span>🟢 Online</span>
+  <button onclick="manualRefresh()" style="margin-left:6px; padding:2px 8px; border-radius:20px; border:none; cursor:pointer; font-size:9px;">Sync</button>
+</div>
+
+<script>
+// ============================================
+// TOAST NOTIFICATION SYSTEM (from index.html)
+// ============================================
+function showToast(title, message, type = 'info', duration = 4000) {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  
+  const icons = {
+    success: 'fa-check-circle',
+    error: 'fa-times-circle',
+    warning: 'fa-exclamation-triangle',
+    info: 'fa-info-circle'
+  };
+  
+  toast.innerHTML = `
+    <div class="toast-icon"><i class="fas ${icons[type] || icons.info}"></i></div>
+    <div class="toast-content">
+      <div class="toast-title">${title}</div>
+      <div class="toast-message">${message}</div>
+    </div>
+    <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+  `;
+  
+  container.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.classList.add('hiding');
+    setTimeout(() => toast.remove(), 400);
+  }, duration);
+  
+  return toast;
+}
+
+// ============================================
+// CONFIGURATION
+// ============================================
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCYiLHesLAvoh6wV_gTQyTGYBwRqiBwDpiKiLsYHOntGVF2gW5NjWUS50YzoHaJmk/exec";
+const GOOGLE_SCRIPT_URL_LC = "https://script.google.com/macros/s/AKfycbwo4bJ6qkDy7HkB4IMRu4y1E0JKHgSF9IZFilJbjeNNUdYkIfg-iv7AuZB3p6vd9Q/exec";
+let locationalRecords = [];
+let currentEditingId = null;
+let currentUser = null;
+
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
+function encodePassword(p) { return btoa(p); }
+function escapeHtml(s) {
+  if (s == null) return "";
+  return String(s).replace(/[&<>]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">" : "&gt;" })[m]);
+}
+function formatDate(d) {
+  if (!d) return "";
+  const dt = new Date(d);
+  if (!isNaN(dt)) return dt.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  return d;
+}
+
+// ============================================
+// SESSION MANAGEMENT (from index.html)
+// ============================================
+function checkSession() {
+  const raw = localStorage.getItem("dhsud_session");
+  if (raw) {
+    try {
+      const s = JSON.parse(raw);
+      const diff = (new Date() - new Date(s.loggedInAt)) / (1000 * 60 * 60);
+      if (diff < 12 && s.email) {
+        currentUser = s;
+        return true;
+      } else localStorage.removeItem("dhsud_session");
+    } catch(e) { localStorage.removeItem("dhsud_session"); }
+  }
+  currentUser = null;
+  return false;
+}
+
+function getUserInitials(n) { if (!n) return "U"; let p = n.split(" "); if (p.length >= 2) return (p[0][0] + p[1][0]).toUpperCase(); return n.substring(0,2).toUpperCase(); }
+function getRoleLabel(r) { if (r === "admin") return "👑 Admin"; if (r === "encoder" || r === "staff") return "📋 Staff/Officer"; return "👁️ Viewer"; }
+function getRoleClass(r) { if (r === "admin") return "admin"; if (r === "encoder" || r === "staff") return "staff"; return "viewer"; }
+
+// ============================================
+// RENDER NAVIGATION & USER MENU (from index.html)
+// ============================================
+function renderMainNavigation() {
+  const container = document.getElementById("mainNavContainer");
+  if (!container) return;
+  let navHtml = `<a href="index.html"><i class="fas fa-home"></i> Home</a>`;
+  if (currentUser) {
+    navHtml += `
+      <div class="dropdown">
+        <button class="dropbtn">Certification</button>
+        <div class="dropdown-content">
+          <a href="lc.html" class="active">Locational Clearance</a>
+          <a href="SZC.html">Site Zoning Certification</a>
+        </div>
+      </div>
+      <div class="dropdown">
+        <button class="dropbtn">Land Use Plans</button>
+        <div class="dropdown-content">
+          <div class="dropdown-submenu">
+            <button class="submenu-trigger">CLUP & ZO <span class="arrow-right">▸</span></button>
+            <div class="submenu-content">
+              <a href="inventory.html">Inventory</a>
+              <a href="status.html">Status</a>
+            </div>
+          </div>
+          <a href="status.html">PDPFP</a>
+        </div>
+      </div>
+      <a href="Techsamp.html"><i class="fas fa-headset"></i> Technical Assistance</a>
+      <a href="lgu-info.html"><i class="fas fa-city"></i> LGU Information</a>
+      <a href="report.html"><i class="fas fa-chart-pie"></i> Reports</a>
+      <a href="calendar.html"><i class="fas fa-calendar-alt"></i> Calendar</a>
+      <a href="issuance.html"><i class="fas fa-file-alt"></i> Issuances</a>
+      <a href="index.html#about">About</a>
+      <a href="index.html#contact">Contact</a>
+    `;
+  } else {
+    navHtml += `<a href="index.html#about">About</a><a href="index.html#contact">Contact</a>`;
+  }
+  container.innerHTML = navHtml;
+  setTimeout(() => {
+    document.querySelectorAll(".dropdown-submenu .submenu-trigger").forEach((trigger) => {
+      trigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const submenu = trigger.closest(".dropdown-submenu");
+        if (submenu) submenu.classList.toggle("open");
+      });
+    });
+    document.addEventListener("click", function (e) {
+      if (!e.target.closest(".dropdown-submenu")) {
+        document.querySelectorAll(".dropdown-submenu.open").forEach((s) => s.classList.remove("open"));
+      }
+    });
+  }, 10);
+}
+
+function renderUserMenu() {
+  const container = document.getElementById("userMenuContainer");
+  if (!container) return;
+  if (currentUser) {
+    const initials = getUserInitials(currentUser.fullName);
+    const firstName = currentUser.fullName?.split(" ")[0] || "User";
+    const roleLabel = getRoleLabel(currentUser.role);
+    const roleClass = getRoleClass(currentUser.role);
+    container.innerHTML = `
+      <div class="user-menu" id="userMenuDropdown" style="position:relative;">
+        <div class="user-avatar">${initials}</div>
+        <span class="user-name">${escapeHtml(firstName)}</span>
+        <span class="role-badge-header ${roleClass}">${roleLabel}</span>
+        <span style="font-size:0.55rem;">▼</span>
+        <div class="user-dropdown-menu">
+          <div class="user-dropdown-item">👤 ${escapeHtml(currentUser.email)}</div>
+          <div class="user-dropdown-item">🏢 ${escapeHtml(currentUser.office || "ELUPDD")}</div>
+          ${currentUser.role === "admin" ? `<div class="user-dropdown-item" id="adminConsoleLink">⚙️ Manage Users</div>` : ""}
+          <div class="user-dropdown-item" id="logoutDropdownBtn" style="color:#dc2626;">🚪 Sign Out</div>
+        </div>
+      </div>
+    `;
+    const userDiv = document.getElementById("userMenuDropdown");
+    if (userDiv) {
+      userDiv.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const menu = userDiv.querySelector(".user-dropdown-menu");
+        if (menu) menu.style.display = menu.style.display === "block" ? "none" : "block";
+      });
+      document.addEventListener("click", () => {
+        const menu = userDiv?.querySelector(".user-dropdown-menu");
+        if (menu) menu.style.display = "none";
+      });
+    }
+    if (currentUser.role === "admin") {
+      const adminBtn = document.getElementById("adminConsoleLink");
+      if (adminBtn) adminBtn.addEventListener("click", () => (window.location.href = "admin.html"));
+    }
+    const logoutBtn = document.getElementById("logoutDropdownBtn");
+    if (logoutBtn) logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("dhsud_session");
+      showToast("Logged Out", "You have been logged out successfully.", "info");
+      setTimeout(() => { window.location.href = "index.html"; }, 700);
+    });
+  } else {
+    container.innerHTML = `<div class="login-prompt" onclick="openLoginModal()"><i class="fas fa-sign-in-alt"></i> Sign In</div>`;
+  }
+}
+
+// ============================================
+// LOGIN MODAL (from index.html)
+// ============================================
+function openLoginModal() {
+  document.getElementById("loginModal").classList.add("active");
+}
+function closeLoginModal() {
+  document.getElementById("loginModal").classList.remove("active");
+}
+async function handleModalLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById("modalLoginEmail").value.trim().toLowerCase();
+  const password = document.getElementById("modalLoginPassword").value;
+  const btn = document.getElementById("loginModalBtn");
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = "⏳ Authenticating...";
+  try {
+    const resp = await fetch(`${GOOGLE_SCRIPT_URL}?action=get&data_type=users&_=${Date.now()}`);
+    const users = await resp.json();
+    const user = users.find((u) => u.email?.toLowerCase() === email);
+    if (!user) { showToast("Authentication Failed", "Account not found.", "error"); btn.innerHTML = originalText; btn.disabled = false; return false; }
+    if (user.password === encodePassword(password)) {
+      const session = { userId: user.id, email: user.email, fullName: user.fullName, office: user.office || "ELUPDD", role: user.role, loggedInAt: new Date().toISOString() };
+      localStorage.setItem("dhsud_session", JSON.stringify(session));
+      showToast("Welcome", `Welcome ${user.fullName?.split(" ")[0] || ""}!`, "success");
+      closeLoginModal();
+      setTimeout(() => window.location.reload(), 1000);
+    } else {
+      showToast("Authentication Failed", "Invalid password.", "error");
+    }
+  } catch (error) {
+    showToast("Connection Error", "Please try again.", "error");
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+  return false;
+}
+
+// ============================================
+// NUMBER GENERATION FUNCTIONS
+// ============================================
+async function generateApplicationNo() {
+  const now = new Date();
+  const year = now.getFullYear().toString().slice(-2);
+  const month = (now.getMonth() + 1).toString().padStart(2, '0');
+  let maxSeq = 0;
+  const currentPrefix = `ELUPDD-${month}-${year}-`;
+  for (const record of locationalRecords) {
+    if (record.applicationNo && record.applicationNo.startsWith(currentPrefix)) {
+      const parts = record.applicationNo.split('-');
+      if (parts.length === 4) {
+        const seq = parseInt(parts[3], 10);
+        if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
+      }
+    }
+  }
+  const nextSeq = (maxSeq + 1).toString().padStart(3, '0');
+  return `ELUPDD-${month}-${year}-${nextSeq}`;
+}
+
+async function generateDecisionNo() {
+  const now = new Date();
+  const year = now.getFullYear().toString().slice(-2);
+  const month = (now.getMonth() + 1).toString().padStart(2, '0');
+  let maxSeq = 0;
+  const currentPrefix = `LC-${month}-${year}-`;
+  for (const record of locationalRecords) {
+    if (record.decisionNo && record.decisionNo.startsWith(currentPrefix)) {
+      const parts = record.decisionNo.split('-');
+      if (parts.length === 4) {
+        const seq = parseInt(parts[3], 10);
+        if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
+      }
+    }
+  }
+  const nextSeq = (maxSeq + 1).toString().padStart(3, '0');
+  return `LC-${month}-${year}-${nextSeq}`;
+}
+
+function updateNumberPreviews() {
+  const appMonth = document.getElementById('appMonth')?.value.padStart(2, '0') || 'MM';
+  const appYear = document.getElementById('appYear')?.value.padStart(2, '0') || 'YY';
+  const appSeq = document.getElementById('appSeq')?.value.padStart(3, '0') || 'NNN';
+  const fullAppNo = `ELUPDD-${appMonth}-${appYear}-${appSeq}`;
+  
+  const appPreview = document.getElementById('appPreview');
+  const locAppNo = document.getElementById('locAppNo');
+  if (appPreview) appPreview.innerHTML = `Full: ${fullAppNo}`;
+  if (locAppNo) locAppNo.value = fullAppNo;
+  
+  const decMonth = document.getElementById('decMonth')?.value.padStart(2, '0') || 'MM';
+  const decYear = document.getElementById('decYear')?.value.padStart(2, '0') || 'YY';
+  const decSeq = document.getElementById('decSeq')?.value.padStart(3, '0') || 'NNN';
+  const fullDecNo = `LC-${decMonth}-${decYear}-${decSeq}`;
+  
+  const decPreview = document.getElementById('decPreview');
+  const locDecisionNo = document.getElementById('locDecisionNo');
+  if (decPreview) decPreview.innerHTML = `Full: ${fullDecNo}`;
+  if (locDecisionNo) locDecisionNo.value = fullDecNo;
+}
+
+function setNumberParts(type, fullNumber) {
+  if (type === 'app' && fullNumber && fullNumber.startsWith('ELUPDD-')) {
+    const parts = fullNumber.split('-');
+    if (parts.length === 4) {
+      const appMonth = document.getElementById('appMonth');
+      const appYear = document.getElementById('appYear');
+      const appSeq = document.getElementById('appSeq');
+      if (appMonth) appMonth.value = parts[1];
+      if (appYear) appYear.value = parts[2];
+      if (appSeq) appSeq.value = parts[3];
+    }
+  } else if (type === 'dec' && fullNumber && fullNumber.startsWith('LC-')) {
+    const parts = fullNumber.split('-');
+    if (parts.length === 4) {
+      const decMonth = document.getElementById('decMonth');
+      const decYear = document.getElementById('decYear');
+      const decSeq = document.getElementById('decSeq');
+      if (decMonth) decMonth.value = parts[1];
+      if (decYear) decYear.value = parts[2];
+      if (decSeq) decSeq.value = parts[3];
+    }
+  }
+  updateNumberPreviews();
+}
+
+async function getNextAppSequence(month, year) {
+  let maxSeq = 0;
+  const prefix = `ELUPDD-${month}-${year}-`;
+  for (const record of locationalRecords) {
+    if (record.applicationNo && record.applicationNo.startsWith(prefix)) {
+      const parts = record.applicationNo.split('-');
+      if (parts.length === 4) {
+        const seq = parseInt(parts[3], 10);
+        if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
+      }
+    }
+  }
+  return maxSeq + 1;
+}
+
+async function getNextDecSequence(month, year) {
+  let maxSeq = 0;
+  const prefix = `LC-${month}-${year}-`;
+  for (const record of locationalRecords) {
+    if (record.decisionNo && record.decisionNo.startsWith(prefix)) {
+      const parts = record.decisionNo.split('-');
+      if (parts.length === 4) {
+        const seq = parseInt(parts[3], 10);
+        if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
+      }
+    }
+  }
+  return maxSeq + 1;
+}
+
+async function refreshLatestNumbersDisplay() {
+  const now = new Date();
+  const currentMonth = (now.getMonth() + 1).toString().padStart(2, '0');
+  const currentYear = now.getFullYear().toString().slice(-2);
+  const monthName = now.toLocaleString('default', { month: 'long' });
+  const fullYear = now.getFullYear();
+  
+  const monthBadge = document.getElementById('currentMonthBadge');
+  if (monthBadge) {
+    monthBadge.innerHTML = `<i class="fas fa-calendar-alt"></i> Current: ${monthName} ${fullYear}`;
+  }
+  
+  const nextAppSeq = await getNextAppSequence(currentMonth, currentYear);
+  const nextDecSeq = await getNextDecSequence(currentMonth, currentYear);
+  
+  const latestApp = `ELUPDD-${currentMonth}-${currentYear}-${nextAppSeq.toString().padStart(3, '0')}`;
+  const latestDec = `LC-${currentMonth}-${currentYear}-${nextDecSeq.toString().padStart(3, '0')}`;
+  
+  const latestAppDisplay = document.getElementById('latestAppNoDisplay');
+  const latestDecDisplay = document.getElementById('latestDecNoDisplay');
+  
+  if (latestAppDisplay) latestAppDisplay.innerHTML = latestApp;
+  if (latestDecDisplay) latestDecDisplay.innerHTML = latestDec;
+  
+  const appMonthField = document.getElementById('appMonth');
+  const appYearField = document.getElementById('appYear');
+  const appSeqField = document.getElementById('appSeq');
+  const decMonthField = document.getElementById('decMonth');
+  const decYearField = document.getElementById('decYear');
+  const decSeqField = document.getElementById('decSeq');
+  
+  if (appMonthField) appMonthField.value = currentMonth;
+  if (appYearField) appYearField.value = currentYear;
+  if (appSeqField) appSeqField.value = nextAppSeq.toString().padStart(3, '0');
+  if (decMonthField) decMonthField.value = currentMonth;
+  if (decYearField) decYearField.value = currentYear;
+  if (decSeqField) decSeqField.value = nextDecSeq.toString().padStart(3, '0');
+  
+  updateNumberPreviews();
+}
+
+function initNumberEditors() {
+  const inputs = ['appMonth', 'appYear', 'appSeq', 'decMonth', 'decYear', 'decSeq'];
+  inputs.forEach(id => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.addEventListener('input', updateNumberPreviews);
+      element.addEventListener('change', updateNumberPreviews);
+    }
+  });
+}
+
+function getFullApplicationNo() {
+  const month = document.getElementById('appMonth')?.value.padStart(2, '0') || '00';
+  const year = document.getElementById('appYear')?.value.padStart(2, '0') || '00';
+  const seq = document.getElementById('appSeq')?.value.padStart(3, '0') || '000';
+  return `ELUPDD-${month}-${year}-${seq}`;
+}
+
+function getFullDecisionNo() {
+  const month = document.getElementById('decMonth')?.value.padStart(2, '0') || '00';
+  const year = document.getElementById('decYear')?.value.padStart(2, '0') || '00';
+  const seq = document.getElementById('decSeq')?.value.padStart(3, '0') || '000';
+  return `LC-${month}-${year}-${seq}`;
+}
+
+function validateNumberFormats() {
+  const appMonth = document.getElementById('appMonth')?.value;
+  const appSeq = document.getElementById('appSeq')?.value;
+  const decSeq = document.getElementById('decSeq')?.value;
+  
+  if (appMonth && (parseInt(appMonth) < 1 || parseInt(appMonth) > 12)) {
+    showToast("Invalid Month", "Month must be between 01 and 12", "error");
+    return false;
+  }
+  if (appSeq && (isNaN(parseInt(appSeq)) || parseInt(appSeq) < 1 || parseInt(appSeq) > 999)) {
+    showToast("Invalid Sequence", "Sequence number must be between 001 and 999", "error");
+    return false;
+  }
+  if (decSeq && (isNaN(parseInt(decSeq)) || parseInt(decSeq) < 1 || parseInt(decSeq) > 999)) {
+    showToast("Invalid Sequence", "Sequence number must be between 001 and 999", "error");
+    return false;
+  }
+  return true;
+}
+
+function getColoredDecisionText(decisionText) {
+  if (decisionText === 'Locational Clearance Granted') {
+    return 'Locational Clearance <span style="color: red;">Granted</span>';
+  } else if (decisionText === 'Disapproved') {
+    return '<span style="color: red;">Disapproved</span>';
+  } else if (decisionText === 'Approved with Conditions') {
+    return 'Approved with Conditions';
+  }
+  return decisionText;
+}
+
+// ============================================
+// PHILIPPINE LOCATION DATA
+// ============================================
+const philippineLocations = {
+  "Aklan": { cities: ["Kalibo", "Malay", "Numancia", "Banga", "Balete", "Batan", "Buruanga", "Ibajay", "Lezo", "Libacao", "Madalag", "Makato", "Malinao", "Nabas", "New Washington", "Tangalan"], barangays: {} },
+  "Antique": { cities: ["San Jose de Buenavista", "Caluya", "Culasi", "Hamtic", "Laua-an", "Libertad", "Pandan", "Patnongon", "Sibalom", "Tobias Fornier", "Valderrama", "Anini-y", "Barbaza", "Belison", "Bugasong", "Sebaste"], barangays: {} },
+  "Capiz": { cities: ["Roxas City", "Cuartero", "Dao", "Dumalag", "Dumarao", "Ivisan", "Jamindan", "Maayon", "Mambusao", "Panay", "Panitan", "Pilar", "Pontevedra", "President Roxas", "Sapi-an", "Sigma", "Tapaz"], barangays: {} },
+  "Guimaras": { cities: ["Jordan", "Buenavista", "San Lorenzo", "Sibunag", "Nueva Valencia"], barangays: {} },
+  "Iloilo": { cities: ["Iloilo City", "Passi City", "Ajuy", "Alimodian", "Anilao", "Badiangan", "Balasan", "Banate", "Barotac Nuevo", "Barotac Viejo", "Batad", "Bingawan", "Cabatuan", "Calinog", "Carles", "Concepcion", "Dingle", "Dueñas", "Dumangas", "Estancia", "Guimbal", "Igbaras", "Janiuay", "Lambunao", "Leganes", "Lemery", "Leon", "Maasin", "Miagao", "Mina", "New Lucena", "Oton", "Pavia", "Pototan", "San Dionisio", "San Enrique", "San Joaquin", "San Miguel", "San Rafael", "Santa Barbara", "Sara", "Tigbauan", "Tubungan", "Zarraga"], barangays: {} },
+  "Negros Occidental": { cities: ["Bacolod City", "Bago City", "Cadiz City", "Escalante City", "Himamaylan City", "Kabankalan City", "La Carlota City", "Sagay City", "San Carlos City", "Silay City", "Sipalay City", "Talisay City", "Victorias City"], barangays: {} }
+};
+
+function populateCities() {
+  const province = document.getElementById('locProvince').value;
+  const citySelect = document.getElementById('locCity');
+  citySelect.innerHTML = '<option value="">-- Select City/Municipality --</option>';
+  if (province && philippineLocations[province]) {
+    const cities = philippineLocations[province].cities;
+    cities.sort().forEach(city => {
+      const option = document.createElement('option');
+      option.value = city;
+      option.textContent = city;
+      citySelect.appendChild(option);
+    });
+  }
+}
+
+function updateAreaLocation() {
+  const lotArea = document.getElementById('locLotArea').value;
+  const floorArea = document.getElementById('locFloorArea').value;
+  const province = document.getElementById('locProvince').value;
+  const city = document.getElementById('locCity').value;
+  let barangay = document.getElementById('locBarangay').value;
+  
+  if (barangay && barangay.trim() !== '') {
+    barangay = barangay.trim();
+    const barangayPrefixPattern = /^(Barangay|Brgy\.?)\s/i;
+    if (!barangayPrefixPattern.test(barangay)) {
+      barangay = `Brgy. ${barangay}`;
+    }
+  }
+  
+  let areaParts = [];
+  if (lotArea && lotArea !== '') {
+    areaParts.push(`${lotArea} sq.m. (lot area)`);
+  } else {
+    areaParts.push(`___ sq.m. (lot area)`);
+  }
+  if (floorArea && floorArea !== '') {
+    areaParts.push(`${floorArea} sq.m. (floor area of proposed structure)`);
+  } else {
+    areaParts.push(`___ sq.m. (floor area of proposed structure)`);
+  }
+  
+  let areaLocation = areaParts.join(' / ');
+  
+  let locationParts = [];
+  if (barangay && barangay !== '') locationParts.push(barangay);
+  if (city && city !== '') locationParts.push(city);
+  if (province && province !== '') locationParts.push(province);
+  
+  if (locationParts.length > 0) {
+    areaLocation += ` - ${locationParts.join(', ')}`;
+  }
+  
+  document.getElementById('locAreaLocation').value = areaLocation;
+}
+
+function initAreaLocationListeners() {
+  const fields = ['locLotArea', 'locFloorArea', 'locProvince', 'locCity', 'locBarangay'];
+  fields.forEach(fieldId => {
+    const element = document.getElementById(fieldId);
+    if (element) {
+      element.addEventListener('input', updateAreaLocation);
+      element.addEventListener('change', updateAreaLocation);
+    }
+  });
+  
+  const provinceSelect = document.getElementById('locProvince');
+  if (provinceSelect) {
+    provinceSelect.addEventListener('change', function() {
+      populateCities();
+      updateAreaLocation();
+    });
+  }
+  
+  const citySelect = document.getElementById('locCity');
+  if (citySelect) {
+    citySelect.addEventListener('change', updateAreaLocation);
+  }
+  
+  updateAreaLocation();
+}
+
+// ============================================
+// DATA OPERATIONS
+// ============================================
+async function saveToBackend(action, record) {
+  try {
+    const params = new URLSearchParams();
+    params.append("action", action);
+    params.append("data_type", "locational");
+    params.append("data", JSON.stringify(record));
+    const url = `${GOOGLE_SCRIPT_URL_LC}?${params.toString()}`;
+    const response = await fetch(url, { method: "GET", mode: "cors" });
+    const result = await response.json();
+    return result.success === true;
+  } catch (e) {
+    console.error("Save error:", e);
+    return false;
+  }
+}
+
+async function fetchRecords() {
+  try {
+    const url = `${GOOGLE_SCRIPT_URL_LC}?action=get&data_type=locational&_=${Date.now()}`;
+    const response = await fetch(url, { method: "GET", mode: "cors" });
+    const data = await response.json();
+    locationalRecords = Array.isArray(data) ? data : [];
+    localStorage.setItem("locationalRecords", JSON.stringify(locationalRecords));
+    refreshStatusTable();
+    refreshAccTable();
+  } catch (e) {
+    console.error("Fetch error:", e);
+    const local = localStorage.getItem("locationalRecords");
+    locationalRecords = local ? JSON.parse(local) : [];
+    refreshStatusTable();
+    refreshAccTable();
+  }
+}
+
+async function saveLocationalRecord(e) {
+  e.preventDefault();
+  const saveBtn = e.submitter;
+  const originalText = saveBtn.innerHTML;
+  saveBtn.innerHTML = '<span class="spinner"></span> Saving...';
+  saveBtn.disabled = true;
+  
+  try {
+    const id = currentEditingId || Date.now();
+    let applicationNo = getFullApplicationNo();
+    let decisionNo = getFullDecisionNo();
+    
+    if (!validateNumberFormats()) {
+      saveBtn.innerHTML = originalText;
+      saveBtn.disabled = false;
+      return false;
+    }
+    
+    if (!currentEditingId) {
+      const appExists = locationalRecords.some(r => r.applicationNo === applicationNo);
+      if (appExists) {
+        showToast("Duplicate Application", `Application No. ${applicationNo} already exists!`, "error");
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+        return false;
+      }
+      const decExists = locationalRecords.some(r => r.decisionNo === decisionNo);
+      if (decExists) {
+        showToast("Duplicate Decision", `Decision No. ${decisionNo} already exists!`, "error");
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+        return false;
+      }
+    }
+    
+    const record = {
+      id: id,
+      applicationNo: applicationNo,
+      decisionNo: decisionNo,
+      dateReceipt: document.getElementById("locDateReceipt").value,
+      dateIssue: document.getElementById("locDateIssue").value,
+      applicant: document.getElementById("locApplicant").value.trim(),
+      corporation: document.getElementById("locCorporation").value.trim(),
+      applicantAddress: document.getElementById("locApplicantAddress").value.trim(),
+      corpAddress: document.getElementById("locCorpAddress").value.trim(),
+      projectType: document.getElementById("locProjectType").value.trim(),
+      areaLocation: document.getElementById("locAreaLocation").value.trim(),
+      decision: document.getElementById("locDecision").value,
+      rightOverLand: document.getElementById("locRightOverLand").value.trim(),
+      conditions: document.getElementById("locConditions").value.trim(),
+      orNo: document.getElementById("locOrNo").value.trim(),
+      amountPaid: document.getElementById("locAmountPaid").value.trim(),
+      orDate: document.getElementById("locOrDate").value,
+      status: currentEditingId ? (locationalRecords.find(r => r.id === id)?.status || "For Review") : "For Review",
+      timestamp: new Date().toISOString()
+    };
+    
+    const requiredFields = ['applicant', 'applicantAddress', 'projectType', 'areaLocation', 'decision', 'rightOverLand', 'dateIssue', 'amountPaid'];
+    for (const field of requiredFields) {
+      if (!record[field]) {
+        showToast("Missing Field", `Please fill in: ${field.replace(/([A-Z])/g, ' $1').trim()}`, "error");
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+        return false;
+      }
+    }
+    
+    const action = currentEditingId ? "update" : "add";
+    const backendSuccess = await saveToBackend(action, record);
+    
+    if (backendSuccess) {
+      if (currentEditingId) {
+        const idx = locationalRecords.findIndex(r => r.id === id);
+        if (idx !== -1) locationalRecords[idx] = record;
+      } else {
+        locationalRecords.push(record);
+      }
+      localStorage.setItem("locationalRecords", JSON.stringify(locationalRecords));
+      clearForm();
+      refreshStatusTable();
+      refreshAccTable();
+      showToast("✅ Saved", `Saved: ${record.applicationNo}`, "success");
+    } else {
+      if (currentEditingId) {
+        const idx = locationalRecords.findIndex(r => r.id === id);
+        if (idx !== -1) locationalRecords[idx] = record;
+      } else {
+        locationalRecords.push(record);
+      }
+      localStorage.setItem("locationalRecords", JSON.stringify(locationalRecords));
+      clearForm();
+      refreshStatusTable();
+      refreshAccTable();
+      showToast("⚠️ Saved Locally", `Saved locally only: ${record.applicationNo}`, "warning");
+    }
+  } catch (error) {
+    showToast("Error", "Error saving record: " + error.message, "error");
+    console.error("Save error:", error);
+  } finally {
+    saveBtn.innerHTML = originalText;
+    saveBtn.disabled = false;
+  }
+  return false;
+}
+
+function updateStatus(id, newStatus) {
+  const rec = locationalRecords.find((r) => r.id === id);
+  if (rec) {
+    rec.status = newStatus;
+    saveToBackend("update", rec);
+    localStorage.setItem("locationalRecords", JSON.stringify(locationalRecords));
+    refreshStatusTable();
+    refreshAccTable();
+    showToast("Status Updated", `Status updated to "${newStatus}"`, "info");
+  }
+}
+
+function refreshStatusTable() {
+  const tbody = document.getElementById("statusTableBody");
+  if (!tbody) return;
+  const search = document.getElementById("statusSearch")?.value.toLowerCase() || "";
+  const filter = document.getElementById("statusFilter")?.value || "";
+  let filtered = locationalRecords.filter((r) => r.status !== "Released");
+  if (filter) filtered = filtered.filter((r) => r.status === filter);
+  if (search)
+    filtered = filtered.filter(
+      (r) => r.applicationNo?.toLowerCase().includes(search) || r.applicant?.toLowerCase().includes(search)
+    );
+  filtered.sort((a, b) => new Date(b.dateIssue) - new Date(a.dateIssue));
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="8">📋 No pending records.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtered
+    .map(
+      (r) =>
+        `<tr><td>${escapeHtml(r.applicationNo)}</td><td>${escapeHtml(r.decisionNo)}</td><td>${escapeHtml(r.applicant)}</td><td>${escapeHtml(r.projectType)}</td><td>${formatDate(r.dateIssue)}</td><td>${escapeHtml(r.decision)}</td><td><select class="status-dropdown" onchange="updateStatus(${r.id}, this.value)"><option ${r.status === "For Review" ? "selected" : ""}>For Review</option><option ${r.status === "For RD Signature" ? "selected" : ""}>For RD Signature</option><option ${r.status === "For Release" ? "selected" : ""}>For Release</option><option ${r.status === "Released" ? "selected" : ""}>Released</option></select></td><td class="action-btns"><button class="action-btn view" onclick="viewRecord(${r.id})"><i class="fas fa-eye"></i></button><button class="action-btn edit" onclick="editRecord(${r.id})"><i class="fas fa-edit"></i></button><button class="action-btn print" onclick="printRecord(${r.id})"><i class="fas fa-print"></i></button><button class="action-btn delete" onclick="deleteRecord(${r.id})"><i class="fas fa-trash-alt"></i></button></td></tr>`
+    )
+    .join("");
+}
+
+function refreshAccTable() {
+  const tbody = document.getElementById("accTableBody");
+  if (!tbody) return;
+  const search = document.getElementById("accSearch")?.value.toLowerCase() || "";
+  let filtered = locationalRecords.filter((r) => r.status === "Released");
+  if (search)
+    filtered = filtered.filter(
+      (r) => r.applicationNo?.toLowerCase().includes(search) || r.applicant?.toLowerCase().includes(search)
+    );
+  filtered.sort((a, b) => new Date(b.dateIssue) - new Date(a.dateIssue));
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="8">✅ No released records yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtered
+    .map(
+      (r) =>
+        `<tr><td>${escapeHtml(r.applicationNo)}</td><td>${escapeHtml(r.decisionNo)}</td><td>${escapeHtml(r.applicant)}</td><td>${escapeHtml(r.projectType)}</td><td>${formatDate(r.dateIssue)}</td><td>${escapeHtml(r.decision)}</td><td><span class="status-badge released">✅ Released</span></td><td class="action-btns"><button class="action-btn view" onclick="viewRecord(${r.id})"><i class="fas fa-eye"></i></button><button class="action-btn print" onclick="printRecord(${r.id})"><i class="fas fa-print"></i></button></td></tr>`
+    )
+    .join("");
+}
+
+function viewRecord(id) {
+  const r = locationalRecords.find((r) => r.id === id);
+  if (!r) return;
+  let html = '<div class="form-grid">';
+  for (let [k, v] of Object.entries(r))
+    if (k !== "id") html += `<div class="field-group"><strong>${k}:</strong> ${escapeHtml(String(v || ""))}</div>`;
+  html += `</div>`;
+  document.getElementById("modalTitle").innerHTML = `<i class="fas fa-file-alt"></i> View Locational Clearance`;
+  document.getElementById("modalBody").innerHTML = html;
+  document.getElementById("dataModal").classList.add("active");
+}
+
+function editRecord(id) {
+  const r = locationalRecords.find(r => r.id === id);
+  if (!r) return;
+  currentEditingId = id;
+  switchView("dataEntry");
+  
+  document.getElementById("locDateReceipt").value = r.dateReceipt || "";
+  document.getElementById("locDateIssue").value = r.dateIssue || "";
+  document.getElementById("locApplicant").value = r.applicant || "";
+  document.getElementById("locCorporation").value = r.corporation || "";
+  document.getElementById("locApplicantAddress").value = r.applicantAddress || "";
+  document.getElementById("locCorpAddress").value = r.corpAddress || "";
+  document.getElementById("locProjectType").value = r.projectType || "";
+  document.getElementById("locDecision").value = r.decision || "";
+  document.getElementById("locRightOverLand").value = r.rightOverLand || "";
+  document.getElementById("locConditions").value = r.conditions || "";
+  document.getElementById("locOrNo").value = r.orNo || "";
+  document.getElementById("locAmountPaid").value = r.amountPaid || "";
+  document.getElementById("locOrDate").value = r.orDate || "";
+  
+  if (r.applicationNo) setNumberParts('app', r.applicationNo);
+  if (r.decisionNo) setNumberParts('dec', r.decisionNo);
+  
+  // Parse areaLocation into separate fields
+  if (r.areaLocation) {
+    const areaLocation = r.areaLocation;
+    const lotMatch = areaLocation.match(/(\d+(?:\.\d+)?)\s*sq\.m\.\s*\(lot area\)/);
+    if (lotMatch) document.getElementById("locLotArea").value = lotMatch[1];
+    const floorMatch = areaLocation.match(/(\d+(?:\.\d+)?)\s*sq\.m\.\s*\(floor area of proposed structure\)/);
+    if (floorMatch) document.getElementById("locFloorArea").value = floorMatch[1];
+    const locationMatch = areaLocation.match(/-\s*(.+)$/);
+    if (locationMatch) {
+      const location = locationMatch[1];
+      const parts = location.split(', ').map(p => p.trim());
+      const provinces = ['Aklan', 'Antique', 'Capiz', 'Guimaras', 'Iloilo', 'Negros Occidental'];
+      let provinceFound = '';
+      let remainingParts = [...parts];
+      for (let i = 0; i < remainingParts.length; i++) {
+        if (provinces.includes(remainingParts[i])) {
+          provinceFound = remainingParts[i];
+          remainingParts.splice(i, 1);
+          break;
+        }
+      }
+      if (provinceFound) {
+        document.getElementById("locProvince").value = provinceFound;
+        populateCities();
+        setTimeout(() => {
+          const cities = philippineLocations[provinceFound]?.cities || [];
+          let cityFound = '';
+          let barangayParts = [...remainingParts];
+          for (let i = 0; i < barangayParts.length; i++) {
+            if (cities.includes(barangayParts[i])) {
+              cityFound = barangayParts[i];
+              barangayParts.splice(i, 1);
+              break;
+            }
+          }
+          if (cityFound) document.getElementById("locCity").value = cityFound;
+          let barangayName = barangayParts.join(', ');
+          if (barangayName) {
+            barangayName = barangayName.replace(/^(Barangay|Brgy\.?)\s/i, '');
+            document.getElementById("locBarangay").value = barangayName;
+          }
+        }, 50);
+      } else {
+        let barangayName = location;
+        barangayName = barangayName.replace(/^(Barangay|Brgy\.?)\s/i, '');
+        document.getElementById("locBarangay").value = barangayName;
+      }
+    }
+  }
+  
+  updateAreaLocation();
+  showToast("Editing", `Editing: ${r.applicationNo}`, "info");
+}
+
+async function deleteRecord(id) {
+  if (!confirm("Delete permanently?")) return;
+  const recordToDelete = locationalRecords.find((r) => r.id === id);
+  if (!recordToDelete) return;
+  
+  locationalRecords = locationalRecords.filter((r) => r.id !== id);
+  localStorage.setItem("locationalRecords", JSON.stringify(locationalRecords));
+  
+  try {
+    const params = new URLSearchParams();
+    params.append("action", "delete");
+    params.append("data_type", "locational");
+    params.append("id", id.toString());
+    const url = `${GOOGLE_SCRIPT_URL_LC}?${params.toString()}`;
+    const response = await fetch(url, { method: "GET", mode: "cors" });
+    const result = await response.json();
+    if (result.success) {
+      showToast("Deleted", "Record deleted successfully", "success");
+    } else {
+      showToast("Deleted Locally", "Record deleted locally only. Sync failed.", "warning");
+    }
+  } catch (error) {
+    showToast("Deleted Locally", "Record deleted locally only. Server error.", "warning");
+  }
+  
+  refreshStatusTable();
+  refreshAccTable();
+}
+
+function clearForm() {
+  document.getElementById("locationalForm").reset();
+  currentEditingId = null;
+  document.getElementById("locLotArea").value = "";
+  document.getElementById("locFloorArea").value = "";
+  document.getElementById("locProvince").value = "";
+  document.getElementById("locCity").innerHTML = '<option value="">-- Select City/Municipality --</option>';
+  document.getElementById("locBarangay").value = "";
+  refreshLatestNumbersDisplay();
+  updateAreaLocation();
+  document.getElementById("locDateReceipt").value = "";
+  document.getElementById("locDateIssue").value = "";
+  document.getElementById("locApplicant").value = "";
+  document.getElementById("locCorporation").value = "";
+  document.getElementById("locApplicantAddress").value = "";
+  document.getElementById("locCorpAddress").value = "";
+  document.getElementById("locProjectType").value = "";
+  document.getElementById("locDecision").value = "";
+  document.getElementById("locRightOverLand").value = "";
+  document.getElementById("locOrNo").value = "";
+  document.getElementById("locAmountPaid").value = "";
+  document.getElementById("locOrDate").value = "";
+  setStatus("Form cleared. Ready for new entry.", "info");
+}
+
+function clearStatusSearch() {
+  document.getElementById("statusSearch").value = "";
+  document.getElementById("statusFilter").value = "";
+  refreshStatusTable();
+}
+
+function clearAccSearch() {
+  document.getElementById("accSearch").value = "";
+  refreshAccTable();
+}
+
+function manualRefresh() {
+  fetchRecords();
+  showToast("Refreshed", "Data refreshed from Google Sheets", "info");
+}
+
+function exportToExcel() {
+  const released = locationalRecords.filter((r) => r.status === "Released");
+  if (!released.length) {
+    showToast("No Data", "No released records to export.", "warning");
+    return;
+  }
+  const ws = XLSX.utils.json_to_sheet(
+    released.map((r) => ({
+      "Application No.": r.applicationNo,
+      "Decision No.": r.decisionNo,
+      Applicant: r.applicant,
+      "Project Type": r.projectType,
+      "Date Issued": r.dateIssue,
+      Decision: r.decision,
+      "Amount Paid": r.amountPaid,
+    }))
+  );
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Locational_Released");
+  XLSX.writeFile(wb, `Locational_Released_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  showToast("Exported", "Excel file downloaded successfully.", "success");
+}
+
+function closeModal() {
+  document.getElementById("dataModal").classList.remove("active");
+}
+
+function switchView(view) {
+  const views = { dataEntry: "dataEntryView", status: "statusView", accomplishment: "accomplishmentView" };
+  Object.values(views).forEach((v) => {
+    const el = document.getElementById(v);
+    if (el) el.classList.remove("active");
+  });
+  if (views[view]) document.getElementById(views[view]).classList.add("active");
+  document.querySelectorAll(".toggle-btn").forEach((btn, i) => {
+    btn.classList.remove("active");
+    if (
+      (view === "dataEntry" && i === 0) ||
+      (view === "status" && i === 1) ||
+      (view === "accomplishment" && i === 2)
+    )
+      btn.classList.add("active");
+  });
+  if (view === "status") refreshStatusTable();
+  if (view === "accomplishment") refreshAccTable();
+  setStatus(`View: ${view.charAt(0).toUpperCase() + view.slice(1)}`, "info");
+}
+
+function setStatus(message, type = "info") {
+  const statusDiv = document.getElementById("statusMessage");
+  const statusText = document.getElementById("statusText");
+  if (!statusDiv || !statusText) return;
+  statusText.textContent = message;
+  statusDiv.className = "status-message";
+  const icon = statusDiv.querySelector("i");
+  if (type === "success") {
+    statusDiv.classList.add("success");
+    icon.className = "fas fa-check-circle";
+  } else if (type === "error") {
+    statusDiv.classList.add("error");
+    icon.className = "fas fa-exclamation-circle";
+  } else {
+    icon.className = "fas fa-info-circle";
+  }
+}
+
+// ============================================
+// PRINT FUNCTION
+// ============================================
+function printRecord(id) {
+  const r = locationalRecords.find(record => record.id === id);
+  if (!r) {
+    showToast("Not Found", "Record not found", "error");
+    return;
+  }
+  
+  const formatDateLong = (dateStr) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
+  
+  const dateReceived = formatDateLong(r.dateReceipt);
+  const dateIssued = formatDateLong(r.dateIssue);
+  
+  let conditionsHtml = '';
+  if (r.conditions && r.conditions.trim()) {
+    const conditionsList = r.conditions.split('\n').filter(c => c.trim());
+    if (conditionsList.length > 0) {
+      conditionsHtml = '<ul style="margin: 5px 0 5px 20px;">';
+      conditionsList.forEach(cond => {
+        conditionsHtml += `<li>${escapeHtml(cond)}</li>`;
+      });
+      conditionsHtml += '</ul>';
+    } else {
+      conditionsHtml = `<p>${escapeHtml(r.conditions)}</p>`;
+    }
+  }
+  
+  let decisionText = r.decision || '';
+  if (decisionText === 'Approved') decisionText = 'Locational Clearance Granted';
+  
+  const printHtml = `
+  <div class="print-document">
+    <div class="print-header-with-logo" style="display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 15px;">
+      <div class="print-logo-left" style="flex: 0 0 auto; width: 100px;"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' fill='%231e3a8a'/%3E%3Ctext x='12' y='48' font-size='32' fill='white' font-weight='bold'%3EDH%3C/text%3E%3C/svg%3E" alt="DHSUD Logo" style="height: 60px; width: auto; display: block;"></div>
+      <div class="print-republic-header" style="flex: 1; text-align: center; margin: 0 15px; color: #1e3a8a; font-family: Arial, Helvetica, sans-serif;">
+        <div style="font-size: 12pt;">REPUBLIC OF THE PHILIPPINES</div>
+        <div style="font-size: 14pt; font-weight: bold;"><strong>Department of Human Settlements and Urban Development</strong></div>
+        <div style="font-size: 10pt; font-style: italic;">Kagawaran ng Pananahanang Pantao at Pagpapaunlad ng Kalunsuran</div>
+      </div>
+      <div class="print-logo-right" style="flex: 0 0 auto; width: 100px;"></div>
+    </div>
+    
+    <div class="print-title" style="text-align: center; font-size: 16pt; font-weight: bold; margin: 15px 0; letter-spacing: 3px;">DECISION ON ZONING</div>
+    
+    <div class="print-number-header" style="margin-top: 20px; margin-bottom: 5px; display: flex; justify-content: space-between; font-size: 11pt;">
+      <div class="print-number-left" style="width: 48%;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><strong>Application No.</strong> <span style="text-decoration: underline;">${escapeHtml(r.applicationNo || '')}</span></div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><strong>Date of Receipt</strong> <span style="text-decoration: underline;">${dateReceived}</span></div>
+      </div>
+      <div class="print-number-right" style="width: 48%;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><strong>Decision No.</strong> <span style="text-decoration: underline;">${escapeHtml(r.decisionNo || '')}</span></div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;"><strong>Date of Issue</strong> <span style="text-decoration: underline;">${dateIssued}</span></div>
+      </div>
+    </div>
+    
+    <table class="print-main-table" style="width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed;">
+      <tr>
+        <td style="border: 1px solid #000; padding: 6px 8px; vertical-align: top; width: 20%; background: #f5f5f5; font-weight: normal;">APPLICANT:</td>
+        <td style="border: 1px solid #000; padding: 6px 8px; vertical-align: top; width: 30%;"><strong>${escapeHtml(r.applicant || '')}</strong></td>
+        <td style="border: 1px solid #000; padding: 6px 8px; vertical-align: top; width: 20%; background: #f5f5f5; font-weight: normal;">NAME OF CORPORATION:</td>
+        <td style="border: 1px solid #000; padding: 6px 8px; vertical-align: top; width: 30%;"><strong>${escapeHtml(r.corporation || '')}</strong></td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #000; padding: 6px 8px; vertical-align: top; width: 20%; background: #f5f5f5; font-weight: normal;">ADDRESS:</td>
+        <td style="border: 1px solid #000; padding: 6px 8px; vertical-align: top; width: 30%;"><strong>${escapeHtml(r.applicantAddress || '')}</strong></td>
+        <td style="border: 1px solid #000; padding: 6px 8px; vertical-align: top; width: 20%; background: #f5f5f5; font-weight: normal;">ADDRESS:</td>
+        <td style="border: 1px solid #000; padding: 6px 8px; vertical-align: top; width: 30%;"><strong>${escapeHtml(r.corpAddress || '')}</strong></td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #000; padding: 6px 8px; vertical-align: top; width: 20%; background: #f5f5f5; font-weight: normal;">TYPE OF PROJECT:</td>
+        <td style="border: 1px solid #000; padding: 6px 8px; vertical-align: top; width: 30%;"><strong>${escapeHtml(r.projectType || '')}</strong></td>
+        <td style="border: 1px solid #000; padding: 6px 8px; vertical-align: top; width: 20%; background: #f5f5f5; font-weight: normal;">AREA AND LOCATION:</td>
+        <td style="border: 1px solid #000; padding: 6px 8px; vertical-align: top; width: 30%;"><strong>${escapeHtml(r.areaLocation || '')}</strong></td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #000; padding: 6px 8px; vertical-align: top; width: 20%; background: #f5f5f5; font-weight: normal;">DECISION:</td>
+        <td style="border: 1px solid #000; padding: 6px 8px; vertical-align: top; width: 30%;"><strong>${getColoredDecisionText(decisionText)}</strong></td>
+        <td style="border: 1px solid #000; padding: 6px 8px; vertical-align: top; width: 20%; background: #f5f5f5; font-weight: normal;">RIGHT OVER LAND:</td>
+        <td style="border: 1px solid #000; padding: 6px 8px; vertical-align: top; width: 30%;"><strong>${escapeHtml(r.rightOverLand || '')}</strong></td>
+      </tr>
+    </table>
+    
+    <div class="print-conditions" style="margin-top: 30px; margin-bottom: 2px;">
+      <strong style="font-size: 10pt; display: block; margin-bottom: 2px;">CONDITIONS:</strong>
+    </div>
+    
+    <div class="conditions-box" style="padding: 2px 2px; width: 100%; max-width: 100%; font-size: 10pt; margin-top: 0px; margin-bottom: 5px;">
+      <div class="print-standard-conditions" style="margin: 5px 0;">
+        <ul style="margin: 5px 0 5px 20px; padding-left: 0;">
+          <li style="margin: 5px 0; line-height: 1.2; text-align: justify;">All conditions stipulated herein and in all the representations of the applicant form part of this decision and are subject to monitoring.</li>
+          <li style="margin: 5px 0; line-height: 1.2; text-align: justify;">Non-compliance therewith shall be a cause for cancellation or legal action.</li>
+          <li style="margin: 5px 0; line-height: 1.2; text-align: justify;">The applicable requirements of other government agencies and applicable provisions of existing laws shall be complied with.</li>
+          <li style="margin: 5px 0; line-height: 1.2; text-align: justify;">No activity other than that applied for shall be conducted within the project site.</li>
+          <li style="margin: 5px 0; line-height: 1.2; text-align: justify;">No major expansion, alteration and/or improvement shall be introduced without prior clearance from this office.</li>
+          <li style="margin: 5px 0; line-height: 1.2; text-align: justify;">This decision shall not be construed a certification from this office as to the ownership by the applicant of the parcel of land that is the subject of this decision.</li>
+          <li style="margin: 5px 0; line-height: 1.2; text-align: justify;">Any misrepresentation, false statement or allegations material to the issuance of this decision shall be sufficient cause for its revocation.</li>
+          <li style="margin: 5px 0; line-height: 1.2; text-align: justify;">The applicable provisions of the National Building Code shall be strictly observed.</li>
+          <li style="margin: 5px 0; line-height: 1.2; text-align: justify;">Projects that are within the scope of the Environmental Impact Assessment System shall obtain an Environmental Compliance Certificate from the Department of Environment and Natural Resources.</li>
+          <li style="margin: 5px 0; line-height: 1.2; text-align: justify;">Failure to commence or undertake the use, activity or development covered by this clearance on the property within a period of one year from the date of issuance shall result in its automatic expiration and cancellation.</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="print-signature" style="margin-top: 30px; margin-bottom: 5px; text-align: right;">
+      <div class="signature-name" style="border-top: 1px solid #000; padding-top: 1px; display: inline-block; font-weight: bold; min-width: 80px; letter-spacing: 0.5px;">EnP EVA MARIA P. MARFIL, CSEE</div>
+      <div style="margin-top: 5px; font-size: 9pt; font-style: normal;">Regional Director</div>
+    </div>
+    
+    <table class="footer-box-table" style="width: auto; margin: 5px 0 5px 0; border-collapse: collapse;">
+      <tr>
+        <td style="border: 0.5px solid #000; padding: 2px 8px; text-align: left; font-size: 7pt;">
+          <div><strong>${escapeHtml(r.decisionNo || '')}</strong></div>
+          <div>O.R. No. : ${escapeHtml(r.orNo || 'N/A')}</div>
+          <div>Amount Paid : ₱ ${escapeHtml(r.amountPaid || '0')}</div>
+          <div>Date : ${dateIssued}</div>
+        </td>
+      </tr>
+    </table>
+    
+    <div class="print-office" style="text-align: center; padding: 12px 0 8px 0; border-top: 1px solid #ccc; background: white; font-size: 7pt; margin-top: 30px;">
+      <div class="office-text" style="font-size: 8pt; color: #1e3a8a; line-height: 1.4;">
+        DHSUD Regional Office 6<br>
+        2F Gaisano Capital ICC Mall, Sen. Benigno Aquino Ave., Mandurriao, Iloilo City<br>
+        Tel. No.: (033) 321 6177/ (033) 321 0163 | Mobile Number: 099 991 50630<br>
+        E-mail: region6@dhsud.gov.ph | Facebook: @dhsudregion6
+      </div>
+    </div>
+  </div>
+  `;
+  
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Locational Clearance - ${escapeHtml(r.applicationNo || '')}</title>
+      <meta charset="UTF-8">
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: "Times New Roman", Times, serif; background: white; margin: 0; padding: 0; }
+        .print-document { max-width: 100%; margin: 0; padding: 0.5cm 0.8cm; font-size: 10pt; line-height: 1.2; }
+        @page { size: A4; margin: 1cm; margin-top: 0.5cm; margin-bottom: 0.5cm; }
+        @media print { body { margin: 0; } }
+      </style>
+    </head>
+    <body>
+      ${printHtml}
+      <script>
+        window.onload = function() {
+          window.print();
+          setTimeout(function() { window.close(); }, 1000);
+        };
+      <\/script>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
+}
+
+// ============================================
+// TOGGLE VIEW HANDLERS
+// ============================================
+document.getElementById("toggleDataEntry").addEventListener("click", function() { switchView("dataEntry"); });
+document.getElementById("toggleStatus").addEventListener("click", function() { switchView("status"); });
+document.getElementById("toggleAccomplishment").addEventListener("click", function() { switchView("accomplishment"); });
+
+// ============================================
+// MAP TOOL FUNCTIONS (minimal placeholder)
+// ============================================
+let popupMap = null;
+let mapInitialized = false;
+let mapMarker = null;
+let drawnItems = null;
+let currentBaseLayer = null;
+let geoJsonLayers = [];
+let currentActiveLayer = null;
+let classColorMap = new Map();
+let savedPoints = [];
+let savePointModeActive = false;
+let measuringToolActive = false;
+let currentMeasurementMode = null;
+const CLASS_COLORS = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33", "#a65628", "#f781bf", "#999999"];
+let currentRows = [];
+let corner1PRS92 = { northing: 1193546.82, easting: 610645.297 };
+let corner1DMS = { latDeg: 10, latMin: 48, latSec: 7.4, latHem: "N", lonDeg: 123, lonMin: 25, lonSec: 34.1, lonHem: "E" };
+let traverseOverlay = null;
+let pendingCoordinates = null;
+let currentTempMarker = null;
+
+function dmsToDecimal(deg, min, sec, hem) {
+  let dec = deg + min / 60 + sec / 3600;
+  return hem === "S" || hem === "W" ? -dec : dec;
+}
+
+function computeDeltas(row) {
+  const dist = parseFloat(row.distance);
+  if (isNaN(dist)) return { deltaE: 0, deltaN: 0 };
+  let rad = ((parseFloat(row.degrees) + parseFloat(row.minutes) / 60) * Math.PI) / 180;
+  let sinVal = Math.sin(rad), cosVal = Math.cos(rad);
+  if (row.direction === "N" && row.quadrant === "E") return { deltaN: dist * cosVal, deltaE: dist * sinVal };
+  if (row.direction === "N" && row.quadrant === "W") return { deltaN: dist * cosVal, deltaE: -dist * sinVal };
+  if (row.direction === "S" && row.quadrant === "E") return { deltaN: -dist * cosVal, deltaE: dist * sinVal };
+  return { deltaN: -dist * cosVal, deltaE: -dist * sinVal };
+}
+
+function computeTraversePoints(rows, e0, n0) {
+  let pts = [{ pointNum: 1, name: "Corner 1", easting: e0, northing: n0 }];
+  let currE = 0, currN = 0;
+  for (let i = 0; i < rows.length; i++) {
+    const { deltaE, deltaN } = computeDeltas(rows[i]);
+    currE += deltaE;
+    currN += deltaN;
+    pts.push({ pointNum: i + 2, name: rows[i].to || `Corner ${i + 2}`, easting: e0 + currE, northing: n0 + currN });
+  }
+  return pts;
+}
+
+function computeClosureStats(rows) {
+  let sumE = 0, sumN = 0, totalDist = 0;
+  for (let r of rows) {
+    const { deltaE, deltaN } = computeDeltas(r);
+    sumE += deltaE;
+    sumN += deltaN;
+    totalDist += parseFloat(r.distance) || 0;
+  }
+  const misclosure = Math.hypot(sumE, sumN);
+  const precision = totalDist > 0 ? totalDist / (misclosure + 1e-8) : 0;
+  return { deltaE: sumE, deltaN: sumN, misclosure, precisionRatio: misclosure > 0 ? `1:${Math.round(precision)}` : "Perfect", totalDist };
+}
+
+function prs92ToLatLng(e, n) {
+  const refLat = dmsToDecimal(corner1DMS.latDeg, corner1DMS.latMin, corner1DMS.latSec, corner1DMS.latHem);
+  const refLng = dmsToDecimal(corner1DMS.lonDeg, corner1DMS.lonMin, corner1DMS.lonSec, corner1DMS.lonHem);
+  const metersPerDegLat = 111320;
+  const metersPerDegLng = 111320 * Math.cos((refLat * Math.PI) / 180);
+  return { lat: refLat + (n - corner1PRS92.northing) / metersPerDegLat, lng: refLng + (e - corner1PRS92.easting) / metersPerDegLng };
+}
+
+function refreshSurveyUI() {
+  if (!currentRows || currentRows.length === 0) {
+    document.getElementById("popupClosureStats").innerHTML = 'No legs defined. Click "+ Add Leg" to start building your traverse.';
+    document.getElementById("popupCornerPointsList").innerHTML = "<div>No corner points. Add legs to generate points.</div>";
+    document.getElementById("popupPrs92Display").innerHTML = `📍 PRS92 Corner 1:<br>Easting: ${corner1PRS92.easting.toFixed(3)} m<br>Northing: ${corner1PRS92.northing.toFixed(3)} m`;
+    renderPopupEditableTable();
+    updateMapTraverseOverlay();
+    return;
+  }
+  const points = computeTraversePoints(currentRows, corner1PRS92.easting, corner1PRS92.northing);
+  const stats = computeClosureStats(currentRows);
+  document.getElementById("popupClosureStats").innerHTML = `ΣΔE: ${stats.deltaE.toFixed(4)} m<br>ΣΔN: ${stats.deltaN.toFixed(4)} m<br>Linear Misclosure: ${stats.misclosure.toFixed(4)} m<br>Precision: ${stats.precisionRatio}<br>Perimeter: ${stats.totalDist.toFixed(2)} m`;
+  document.getElementById("popupCornerPointsList").innerHTML = points.map((p) => `<div><strong>${p.name}:</strong> E:${p.easting.toFixed(2)} N:${p.northing.toFixed(2)}</div>`).join("");
+  document.getElementById("popupPrs92Display").innerHTML = `📍 PRS92 Corner 1:<br>Easting: ${corner1PRS92.easting.toFixed(3)} m<br>Northing: ${corner1PRS92.northing.toFixed(3)} m`;
+  renderPopupEditableTable();
+  updateMapTraverseOverlay();
+}
+
+function renderPopupEditableTable() {
+  const tbody = document.getElementById("popupTableBody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  if (!currentRows || currentRows.length === 0) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="7" style="text-align: center; padding: 20px; color: #666;">📋 No legs defined. Click <strong>"+ Add Leg"</strong> to start building your traverse.</td>`;
+    tbody.appendChild(tr);
+    return;
+  }
+  currentRows.forEach((row, idx) => {
+    const { deltaE, deltaN } = computeDeltas(row);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${idx + 1}</td><td>${row.from}→${row.to}</td><td><select class="edit-dir" style="width:48px;">${["N", "S"].map((d) => `<option ${row.direction === d ? "selected" : ""}>${d}</option>`).join("")}</select> <input type="number" class="edit-deg" value="${row.degrees}" style="width:48px;">° <input type="number" class="edit-min" value="${row.minutes}" style="width:48px;">' <select class="edit-quad" style="width:48px;">${["E", "W"].map((q) => `<option ${row.quadrant === q ? "selected" : ""}>${q}</option>`).join("")}</select></td><td><input type="number" class="edit-dist" value="${row.distance}" step="any" style="width:80px;"></td><td>${deltaE.toFixed(2)}</td><td>${deltaN.toFixed(2)}</td><td><button class="delete-row-btn" data-idx="${idx}" style="background:#b91c1c; border:none; color:white; border-radius:14px; padding:2px 6px;">✖</button></td>`;
+    tbody.appendChild(tr);
+  });
+  document.querySelectorAll(".delete-row-btn").forEach((btn) =>
+    btn.addEventListener("click", (e) => {
+      let idx = parseInt(btn.getAttribute("data-idx"));
+      if (!isNaN(idx) && currentRows.length > 0) {
+        currentRows.splice(idx, 1);
+        for (let i = idx; i < currentRows.length; i++) {
+          currentRows[i].from = `Corner ${i + 1}`;
+          currentRows[i].to = `Corner ${i + 2}`;
+        }
+        refreshSurveyUI();
+      }
+    })
+  );
+}
+
+function syncRowsFromPopupTable() {
+  let newRows = [];
+  document.querySelectorAll("#popupTableBody tr").forEach((rowEl, i) => {
+    const dir = rowEl.querySelector(".edit-dir")?.value, deg = rowEl.querySelector(".edit-deg")?.value, min = rowEl.querySelector(".edit-min")?.value, quad = rowEl.querySelector(".edit-quad")?.value, dist = rowEl.querySelector(".edit-dist")?.value;
+    if (dir && deg && min && quad && dist)
+      newRows.push({ from: `Corner ${i + 1}`, to: `Corner ${i + 2}`, direction: dir, degrees: deg, minutes: min, seconds: "00", quadrant: quad, distance: dist });
+  });
+  if (newRows.length) currentRows = newRows;
+  refreshSurveyUI();
+}
+
+function updateTieFromDMS() {
+  corner1DMS = {
+    latDeg: parseFloat(document.getElementById("popupLatDeg").value),
+    latMin: parseFloat(document.getElementById("popupLatMin").value),
+    latSec: parseFloat(document.getElementById("popupLatSec").value),
+    latHem: document.getElementById("popupLatHem").value,
+    lonDeg: parseFloat(document.getElementById("popupLonDeg").value),
+    lonMin: parseFloat(document.getElementById("popupLonMin").value),
+    lonSec: parseFloat(document.getElementById("popupLonSec").value),
+    lonHem: document.getElementById("popupLonHem").value,
+  };
+  const newLat = dmsToDecimal(corner1DMS.latDeg, corner1DMS.latMin, corner1DMS.latSec, corner1DMS.latHem);
+  const newLng = dmsToDecimal(corner1DMS.lonDeg, corner1DMS.lonMin, corner1DMS.lonSec, corner1DMS.lonHem);
+  if (popupMap) popupMap.setView([newLat, newLng], 14);
+  refreshSurveyUI();
+  showToast("Tie Point Updated", "Tie point updated successfully", "info");
+}
+
+function updateMapTraverseOverlay() {
+  if (!popupMap) return;
+  if (traverseOverlay) popupMap.removeLayer(traverseOverlay);
+  if (!currentRows || currentRows.length === 0) { traverseOverlay = null; return; }
+  const points = computeTraversePoints(currentRows, corner1PRS92.easting, corner1PRS92.northing);
+  if (points.length < 2) return;
+  const latLngPoints = points.map((p) => prs92ToLatLng(p.easting, p.northing));
+  const closedPoints = [...latLngPoints, latLngPoints[0]];
+  const polyline = L.polyline(latLngPoints, { color: "#e34d4d", weight: 3, opacity: 0.9 });
+  const polygon = L.polygon(closedPoints, { color: "#e34d4d", weight: 2, fillColor: "#ffb347", fillOpacity: 0.25 });
+  const markers = L.layerGroup();
+  latLngPoints.forEach((coord, idx) => {
+    let m = L.circleMarker(coord, { radius: 5, color: "#2c5f8a", fillOpacity: 1 }).bindTooltip(points[idx].name);
+    markers.addLayer(m);
+  });
+  traverseOverlay = L.layerGroup([polyline, polygon, markers]).addTo(popupMap);
+  try { if (latLngPoints.length > 0) popupMap.fitBounds(L.latLngBounds(latLngPoints).pad(0.1)); } catch (e) {}
+}
+
+function exportSurveyGeoJSON() {
+  const points = computeTraversePoints(currentRows, corner1PRS92.easting, corner1PRS92.northing);
+  const latLngPoints = points.map((p) => prs92ToLatLng(p.easting, p.northing));
+  const coordinates = latLngPoints.map((p) => [p.lng, p.lat]);
+  coordinates.push(coordinates[0]);
+  const geojson = {
+    type: "FeatureCollection",
+    features: [{ type: "Feature", properties: { name: "PRS92 Traverse", perimeter_m: computeClosureStats(currentRows).totalDist }, geometry: { type: "Polygon", coordinates: [coordinates] } }]
+  };
+  const dataStr = JSON.stringify(geojson);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `traverse_${Date.now()}.geojson`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast("Exported", "GeoJSON file downloaded.", "success");
+}
+
+function exportSurveyShapefile() {
+  showToast("Shapefile Export", "GeoJSON saved instead (ZIP simulation)", "info");
+  const zip = new JSZip();
+  zip.file("polygon.prj", `GEOGCS["WGS_84"]`);
+  zip.generateAsync({ type: "blob" }).then((content) => {
+    const url = URL.createObjectURL(content);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `survey_${Date.now()}.zip`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+
+function openSurveyMapPopup() {
+  let modal = document.getElementById("mapPopupModal");
+  modal.classList.add("active");
+  setTimeout(() => {
+    if (!mapInitialized) {
+      popupMap = L.map("popupMap", { center: [10.802, 123.426], zoom: 13, zoomControl: true, scrollWheelZoom: true, doubleClickZoom: true });
+      currentBaseLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>', maxZoom: 18 }).addTo(popupMap);
+      popupMap.invalidateSize();
+      mapInitialized = true;
+      initGeocoder();
+      setupSearchEnterKey();
+      initMeasurementTools();
+      loadSavedPoints();
+      const savePointToggleBtn = document.getElementById("toggleSavePointBtn");
+      if (savePointToggleBtn)
+        savePointToggleBtn.onclick = () => {
+          if (measuringToolActive) {
+            if (currentMeasurementMode === "distance") document.getElementById("startMeasureLineBtn").click();
+            else if (currentMeasurementMode === "area") document.getElementById("startMeasureAreaBtn").click();
+          }
+          toggleSavePointMode(!savePointModeActive);
+        };
+      toggleSavePointMode(false);
+      if (!popupMap.zoomControl) L.control.zoom({ position: "topright" }).addTo(popupMap);
+    } else {
+      popupMap.invalidateSize();
+    }
+    refreshSurveyUI();
+  }, 200);
+}
+
+function initGeocoder() { console.log("Search ready"); }
+
+async function searchMapLocation() {
+  const searchTerm = document.getElementById("mapSearchInput").value.trim();
+  if (!searchTerm) { showToast("Search", "Please enter a search term", "warning"); return; }
+  showToast("Searching", "Searching...", "info");
+  const savedPointResults = searchSavedPoints(searchTerm);
+  let addressResults = [];
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchTerm)}&format=json&limit=5&countrycodes=ph`;
+    const response = await fetch(url, { headers: { Accept: "application/json", "User-Agent": "DHSUD-Zoning-App/1.0" } });
+    if (response.ok) {
+      const data = await response.json();
+      addressResults = data.map((item) => ({ name: item.display_name, lat: parseFloat(item.lat), lon: parseFloat(item.lon), latlng: { lat: parseFloat(item.lat), lng: parseFloat(item.lon) } }));
+    }
+  } catch (e) { console.log("Search error:", e); }
+  displaySearchResults(savedPointResults, addressResults, searchTerm);
+}
+
+function searchSavedPoints(searchTerm) {
+  const term = searchTerm.toLowerCase();
+  return savedPoints.filter((point) => point.certificationNo.toLowerCase().includes(term) || point.requestedBy.toLowerCase().includes(term));
+}
+
+function displaySearchResults(savedPointsResults, addressResults, searchTerm) {
+  const dropdown = document.getElementById("searchResultsDropdown");
+  if (savedPointsResults.length === 0 && addressResults.length === 0) {
+    dropdown.innerHTML = '<div class="search-result-item" style="color: #666;">No results found. Try a different search term.</div>';
+    dropdown.classList.add("active");
+    setTimeout(() => dropdown.classList.remove("active"), 3000);
+    return;
+  }
+  let html = "";
+  if (savedPointsResults.length > 0) {
+    html += `<div style="padding: 6px 10px; background: #f1f5f9; font-size: 0.6rem; font-weight: 600; color: #1e3a8a;">📌 SAVED POINTS (${savedPointsResults.length})</div>`;
+    savedPointsResults.forEach((point) => {
+      html += `<div class="search-result-item" onclick="zoomToSavedPoint(${point.lat}, ${point.lng}, '${escapeHtml(point.certificationNo)}')"><div class="search-result-title">📄 ${escapeHtml(point.certificationNo)}<span class="search-type-badge saved-point">Saved Point</span></div><div class="search-result-subtitle">👤 ${escapeHtml(point.requestedBy)} | 📍 ${point.lat.toFixed(5)}, ${point.lng.toFixed(5)}</div></div>`;
+    });
+  }
+  if (addressResults.length > 0) {
+    if (savedPointsResults.length > 0) html += `<div style="padding: 6px 10px; background: #f1f5f9; font-size: 0.6rem; font-weight: 600; color: #1e3a8a; border-top: 1px solid #e2e8f0;">🏠 LOCATIONS (${addressResults.length})</div>`;
+    else html += `<div style="padding: 6px 10px; background: #f1f5f9; font-size: 0.6rem; font-weight: 600; color: #1e3a8a;">🏠 SEARCH RESULTS</div>`;
+    addressResults.forEach((result, idx) => {
+      const lat = result.lat || result.latlng?.lat;
+      const lng = result.lon || result.latlng?.lng;
+      if (lat && lng) {
+        const displayName = result.name ? result.name.substring(0, 70) : `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        html += `<div class="search-result-item" onclick="zoomToAddress(${lat}, ${lng}, '${escapeHtml(displayName).replace(/'/g, "\\'")}')"><div class="search-result-title">📍 ${escapeHtml(displayName)}<span class="search-type-badge address">Location</span></div><div class="search-result-subtitle">${lat.toFixed(5)}, ${lng.toFixed(5)}</div></div>`;
+      }
+    });
+  }
+  dropdown.innerHTML = html;
+  dropdown.classList.add("active");
+  setTimeout(() => dropdown.classList.remove("active"), 10000);
+}
+
+function zoomToSavedPoint(lat, lng, certNo) {
+  if (popupMap) {
+    popupMap.setView([lat, lng], 18);
+    showToast("Zoomed", `📍 Zoomed to: ${certNo}`, "info");
+    document.getElementById("searchResultsDropdown").classList.remove("active");
+    document.getElementById("mapSearchInput").value = "";
+    document.getElementById("popupLatitude").value = lat.toFixed(6);
+    document.getElementById("popupLongitude").value = lng.toFixed(6);
+    if (window.highlightMarker) popupMap.removeLayer(window.highlightMarker);
+    window.highlightMarker = L.circleMarker([lat, lng], { radius: 12, color: "#f59e0b", weight: 4, fillColor: "#fbbf24", fillOpacity: 0.7 }).addTo(popupMap);
+    setTimeout(() => { if (window.highlightMarker) { popupMap.removeLayer(window.highlightMarker); window.highlightMarker = null; } }, 3000);
+  }
+}
+
+function zoomToAddress(lat, lng, addressName) {
+  if (popupMap) {
+    popupMap.setView([lat, lng], 16);
+    showToast("Zoomed", `📍 ${addressName.substring(0, 40)}...`, "info");
+    document.getElementById("searchResultsDropdown").classList.remove("active");
+    document.getElementById("mapSearchInput").value = "";
+    document.getElementById("popupLatitude").value = lat.toFixed(6);
+    document.getElementById("popupLongitude").value = lng.toFixed(6);
+    if (window.searchMarker) popupMap.removeLayer(window.searchMarker);
+    window.searchMarker = L.marker([lat, lng], { icon: L.divIcon({ className: "search-marker", html: `<div style="background: #2563eb; width: 14px; height: 14px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 8px rgba(0,0,0,0.3);"></div>`, iconSize: [14, 14], popupAnchor: [0, -7] }) }).addTo(popupMap).bindPopup(`<strong>📍 ${escapeHtml(addressName.substring(0, 100))}</strong>`).openPopup();
+    setTimeout(() => { if (window.searchMarker) { popupMap.removeLayer(window.searchMarker); window.searchMarker = null; } }, 5000);
+  }
+}
+
+function showSavedPointsList() {
+  if (savedPoints.length === 0) { showToast("No Saved Points", "No saved points found", "warning"); return; }
+  let listHtml = `<div id="savedPointsListModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10002; display: flex; justify-content: center; align-items: center; padding:1rem;"><div style="background: white; border-radius: 24px; width: 100%; max-width: 500px; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column;"><div style="padding: 1rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;"><h3 style="color: #1e3a8a; margin: 0; font-size:1rem;">📌 Saved Points (${savedPoints.length})</h3><button onclick="closeSavedPointsList()" style="background: none; border: none; font-size: 22px; cursor: pointer;">&times;</button></div><div style="overflow-y: auto; padding: 0.5rem;">`;
+  savedPoints.forEach((point) => {
+    listHtml += `<div style="padding: 0.6rem; border-bottom: 1px solid #eef2ff; cursor: pointer;" onclick="zoomToSavedPoint(${point.lat}, ${point.lng}, '${escapeHtml(point.certificationNo)}'); closeSavedPointsList();"><div style="font-weight: 600; color: #1e3a8a; font-size:0.8rem;">📄 ${escapeHtml(point.certificationNo)}</div><div style="font-size: 0.65rem; color: #64748b;">👤 ${escapeHtml(point.requestedBy)}</div><div style="font-size: 0.6rem; color: #94a3b8; font-family: monospace;">${point.lat.toFixed(5)}, ${point.lng.toFixed(5)}</div><div style="font-size: 0.55rem; color: #cbd5e1;">${new Date(point.dateSaved).toLocaleDateString()}</div></div>`;
+  });
+  listHtml += `</div><div style="padding: 0.8rem; border-top: 1px solid #e2e8f0; display: flex; gap: 0.5rem;"><button class="btn-sm" onclick="clearAllSavedPoints(); closeSavedPointsList();" style="background:#dc3545; flex:1;">🗑️ Delete All</button><button class="btn-sm" onclick="closeSavedPointsList()" style="background:#6c757d; flex:1;">Close</button></div></div></div>`;
+  const existingModal = document.getElementById("savedPointsListModal");
+  if (existingModal) existingModal.remove();
+  document.body.insertAdjacentHTML("beforeend", listHtml);
+}
+
+function closeSavedPointsList() { const modal = document.getElementById("savedPointsListModal"); if (modal) modal.remove(); }
+
+function setupSearchEnterKey() {
+  const searchInput = document.getElementById("mapSearchInput");
+  if (searchInput) searchInput.addEventListener("keypress", (e) => { if (e.key === "Enter") searchMapLocation(); });
+}
+
+function changeMapView(type) {
+  if (!popupMap) return;
+  if (currentBaseLayer) popupMap.removeLayer(currentBaseLayer);
+  let url, attribution;
+  if (type === "satellite") { url = "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"; attribution = "Imagery &copy; Google Maps"; }
+  else if (type === "street") { url = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"; attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'; }
+  else { url = "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"; attribution = '&copy; <a href="https://opentopomap.org">OpenTopoMap</a> contributors'; }
+  currentBaseLayer = L.tileLayer(url, { attribution: attribution, maxZoom: 20 }).addTo(popupMap);
+  const streetBtn = document.getElementById("mapTypeStreet"), satelliteBtn = document.getElementById("mapTypeSatellite"), outdoorBtn = document.getElementById("mapTypeOutdoor");
+  if (streetBtn) streetBtn.classList.remove("active");
+  if (satelliteBtn) satelliteBtn.classList.remove("active");
+  if (outdoorBtn) outdoorBtn.classList.remove("active");
+  if (type === "street" && streetBtn) streetBtn.classList.add("active");
+  if (type === "satellite" && satelliteBtn) satelliteBtn.classList.add("active");
+  if (type === "outdoor" && outdoorBtn) outdoorBtn.classList.add("active");
+  showToast("Map View", `Switched to ${type === "satellite" ? "Satellite View" : type === "outdoor" ? "Terrain View" : "Street View"}`, "info");
+}
+
+function initMeasurementTools() {
+  if (!popupMap) return;
+  drawnItems = L.featureGroup().addTo(popupMap);
+  const measureLineBtn = document.getElementById("startMeasureLineBtn");
+  const measureAreaBtn = document.getElementById("startMeasureAreaBtn");
+  const clearMeasureBtn = document.getElementById("clearMeasureBtn");
+  let activeMeasurementControl = null;
+  
+  function removeDrawControl() { if (activeMeasurementControl) { activeMeasurementControl.disable(); activeMeasurementControl = null; } }
+  function deactivateMeasurementMode() {
+    measuringToolActive = false;
+    currentMeasurementMode = null;
+    removeDrawControl();
+    if (measureLineBtn) measureLineBtn.classList.remove("measuring-active", "toggle-active");
+    if (measureAreaBtn) measureAreaBtn.classList.remove("measuring-active", "toggle-active");
+    if (popupMap) { popupMap.dragging.enable(); popupMap.doubleClickZoom.enable(); popupMap.scrollWheelZoom.enable(); }
+    document.getElementById("measureResult").innerHTML = "⚡ Click a button to start measuring";
+  }
+  
+  if (measureLineBtn) {
+    measureLineBtn.onclick = () => {
+      if (currentMeasurementMode === "distance") { deactivateMeasurementMode(); return; }
+      deactivateMeasurementMode();
+      measuringToolActive = true;
+      currentMeasurementMode = "distance";
+      measureLineBtn.classList.add("measuring-active", "toggle-active");
+      document.getElementById("measureResult").innerHTML = "📏 Distance mode ACTIVE - Click on the map to measure. Click button again to turn OFF.";
+      if (savePointModeActive) toggleSavePointMode(false);
+      popupMap.dragging.disable();
+      popupMap.doubleClickZoom.disable();
+      activeMeasurementControl = new L.Draw.Polyline(popupMap);
+      activeMeasurementControl.enable();
+      popupMap.once("draw:created", (e) => {
+        let layer = e.layer;
+        drawnItems.addLayer(layer);
+        let latlngs = layer.getLatLngs();
+        let total = 0;
+        for (let i = 0; i < latlngs.length - 1; i++) total += latlngs[i].distanceTo(latlngs[i + 1]);
+        const resultText = total >= 1000 ? `📏 Distance: ${(total / 1000).toFixed(2)} km` : `📏 Distance: ${total.toFixed(1)} m`;
+        document.getElementById("measureResult").innerHTML = resultText;
+        removeDrawControl();
+        measureLineBtn.classList.remove("measuring-active", "toggle-active");
+        measuringToolActive = false;
+        currentMeasurementMode = null;
+        popupMap.dragging.enable();
+        popupMap.doubleClickZoom.enable();
+      });
+    };
+  }
+  
+  if (measureAreaBtn) {
+    measureAreaBtn.onclick = () => {
+      if (currentMeasurementMode === "area") { deactivateMeasurementMode(); return; }
+      deactivateMeasurementMode();
+      measuringToolActive = true;
+      currentMeasurementMode = "area";
+      measureAreaBtn.classList.add("measuring-active", "toggle-active");
+      document.getElementById("measureResult").innerHTML = "📐 Area mode ACTIVE - Click on the map to measure area. Click button again to turn OFF.";
+      if (savePointModeActive) toggleSavePointMode(false);
+      popupMap.dragging.disable();
+      popupMap.doubleClickZoom.disable();
+      activeMeasurementControl = new L.Draw.Polygon(popupMap);
+      activeMeasurementControl.enable();
+      popupMap.once("draw:created", (e) => {
+        let layer = e.layer;
+        drawnItems.addLayer(layer);
+        let latlngs = layer.getLatLngs()[0];
+        let area = 0;
+        for (let i = 0; i < latlngs.length; i++) {
+          let j = (i + 1) % latlngs.length;
+          area += latlngs[i].lat * latlngs[j].lng;
+          area -= latlngs[j].lat * latlngs[i].lng;
+        }
+        area = Math.abs(area) / 2;
+        const areaSqM = area * 111319.9 * 111319.9;
+        const resultText = areaSqM >= 10000 ? `📐 Area: ${(areaSqM / 10000).toFixed(2)} ha` : `📐 Area: ${areaSqM.toFixed(1)} sq m`;
+        document.getElementById("measureResult").innerHTML = resultText;
+        removeDrawControl();
+        measureAreaBtn.classList.remove("measuring-active", "toggle-active");
+        measuringToolActive = false;
+        currentMeasurementMode = null;
+        popupMap.dragging.enable();
+        popupMap.doubleClickZoom.enable();
+      });
+    };
+  }
+  
+  if (clearMeasureBtn)
+    clearMeasureBtn.onclick = () => {
+      drawnItems.clearLayers();
+      deactivateMeasurementMode();
+      document.getElementById("measureResult").innerHTML = "🗑️ Cleared! Click a button to start measuring.";
+    };
+}
+
+function addGeoJsonLayerToMap(geojson, name) {
+  if (!popupMap) return;
+  if (currentActiveLayer?.layer) popupMap.removeLayer(currentActiveLayer.layer);
+  let layer = L.geoJSON(geojson, {
+    style: { color: "#3388ff", weight: 2, fillOpacity: 0.4 },
+    onEachFeature: (f, l) => {
+      let pop = "<b>Info</b>";
+      for (let [k, v] of Object.entries(f.properties)) pop += `<br>${k}: ${v}`;
+      l.bindPopup(pop);
+    },
+  }).addTo(popupMap);
+  currentActiveLayer = { id: Date.now(), name: name, layer: layer, geojsonData: geojson, hidden: false, originalStyle: { color: "#3388ff", weight: 2, fillOpacity: 0.4 } };
+  geoJsonLayers = [currentActiveLayer];
+  let attrs = new Set();
+  geojson.features.forEach((f) => { if (f.properties) Object.keys(f.properties).forEach((k) => attrs.add(k)); });
+  let select = document.getElementById("attributeColumnSelect");
+  select.innerHTML = '<option value="">-- Categorize by --</option>';
+  attrs.forEach((a) => (select.innerHTML += `<option value="${a}">${a}</option>`));
+  document.getElementById("attributeSelector").style.display = "block";
+  renderLayerListUI();
+  try { popupMap.fitBounds(layer.getBounds()); } catch (e) {}
+}
+
+function updateCategoryFilterFromAttribute() {
+  let attr = document.getElementById("attributeColumnSelect").value;
+  if (!attr || !currentActiveLayer) return;
+  let geojson = currentActiveLayer.geojsonData;
+  let vals = [...new Set(geojson.features.map((f) => String(f.properties?.[attr] || "Unknown")))];
+  let filterSelect = document.getElementById("categoryFilterSelect");
+  if (!filterSelect) {
+    const newSelect = document.createElement("select");
+    newSelect.id = "categoryFilterSelect";
+    newSelect.style.display = "inline-block";
+    newSelect.onchange = applyCategoryFilter;
+    document.getElementById("attributeSelector").appendChild(newSelect);
+    filterSelect = newSelect;
+  }
+  filterSelect.innerHTML = '<option value="">-- Filter --</option>';
+  vals.forEach((v) => (filterSelect.innerHTML += `<option value="${v}">${v}</option>`));
+  filterSelect.style.display = "inline-block";
+  classColorMap.clear();
+  vals.forEach((v, i) => classColorMap.set(v, CLASS_COLORS[i % CLASS_COLORS.length]));
+  if (currentActiveLayer.layer) popupMap.removeLayer(currentActiveLayer.layer);
+  let newLayer = L.geoJSON(geojson, {
+    style: (feat) => {
+      let val = String(feat.properties?.[attr] || "Unknown");
+      return { color: classColorMap.get(val), weight: 3, fillColor: classColorMap.get(val), fillOpacity: 0.6 };
+    },
+    onEachFeature: (f, l) => {
+      let pop = "<b>Categorized</b>";
+      for (let [k, v] of Object.entries(f.properties)) pop += `<br>${k}: ${v}`;
+      l.bindPopup(pop);
+    },
+  }).addTo(popupMap);
+  currentActiveLayer.layer = newLayer;
+  let legendDiv = document.getElementById("legendPanel");
+  let html = "<strong>Legend:</strong><br>";
+  for (let [val, color] of classColorMap.entries())
+    html += `<span><span style="background:${color};display:inline-block;width:14px;height:8px;border-radius:3px;"></span> ${val.substring(0, 20)}</span> `;
+  legendDiv.innerHTML = html;
+}
+
+function resetLayerColors() {
+  if (currentActiveLayer?.geojsonData) {
+    if (currentActiveLayer.layer) popupMap.removeLayer(currentActiveLayer.layer);
+    let layer = L.geoJSON(currentActiveLayer.geojsonData, { style: { color: "#3388ff", weight: 2, fillOpacity: 0.4 } }).addTo(popupMap);
+    currentActiveLayer.layer = layer;
+    classColorMap.clear();
+    document.getElementById("attributeColumnSelect").value = "";
+    const filterSelect = document.getElementById("categoryFilterSelect");
+    if (filterSelect) filterSelect.style.display = "none";
+    document.getElementById("legendPanel").innerHTML = "<strong>Legend:</strong> Upload GeoJSON to categorize";
+  }
+}
+
+function applyCategoryFilter() {
+  let filterVal = document.getElementById("categoryFilterSelect")?.value;
+  if (!filterVal || !currentActiveLayer) return;
+  let filtered = currentActiveLayer.geojsonData.features.filter((f) => String(f.properties?.[currentAttribute] || "Unknown") === filterVal);
+  let filteredGeo = { type: "FeatureCollection", features: filtered };
+  if (currentActiveLayer.layer) popupMap.removeLayer(currentActiveLayer.layer);
+  let newLayer = L.geoJSON(filteredGeo, { style: { color: "#059669", weight: 3, fillOpacity: 0.6 } }).addTo(popupMap);
+  currentActiveLayer.layer = newLayer;
+  showToast("Filter Applied", `Filter: ${filtered.length} features`, "info");
+}
+
+function clearAllLayers() {
+  if (geoJsonLayers.length) {
+    geoJsonLayers.forEach((l) => { if (l.layer) popupMap.removeLayer(l.layer); });
+    geoJsonLayers = [];
+    currentActiveLayer = null;
+    classColorMap.clear();
+    renderLayerListUI();
+    document.getElementById("attributeSelector").style.display = "none";
+    document.getElementById("legendPanel").innerHTML = "<strong>Legend:</strong> No layers";
+  }
+}
+
+function renderLayerListUI() {
+  let container = document.getElementById("layerListContainer");
+  if (!container) return;
+  if (geoJsonLayers.length === 0) { container.innerHTML = "<div>No layers loaded.</div>"; return; }
+  container.innerHTML = geoJsonLayers.map((l, idx) => `<div class="layer-item" style="padding:2px 0; font-size:0.6rem;"><strong>${l.name}</strong> <button class="btn-sm" onclick="toggleLayerVisibility(${idx})">Hide</button> <button class="btn-sm" onclick="removeLayer(${idx})" style="background:#dc3545;">Remove</button></div>`).join("");
+}
+
+function toggleLayerVisibility(index) {
+  const layer = geoJsonLayers[index];
+  if (!layer) return;
+  if (layer.layer) popupMap.removeLayer(layer.layer);
+  layer.hidden = true;
+  renderLayerListUI();
+}
+
+function removeLayer(idx) {
+  if (geoJsonLayers[idx]?.layer) popupMap.removeLayer(geoJsonLayers[idx].layer);
+  geoJsonLayers.splice(idx, 1);
+  if (geoJsonLayers.length === 0) currentActiveLayer = null;
+  renderLayerListUI();
+}
+
+document.getElementById("geojsonFileInput").addEventListener("change", function (e) {
+  let file = e.target.files[0];
+  if (!file) return;
+  let reader = new FileReader();
+  reader.onload = function (ev) {
+    try {
+      let geojson = JSON.parse(ev.target.result);
+      if (geojson.type === "FeatureCollection") addGeoJsonLayerToMap(geojson, file.name);
+      else alert("Invalid: need FeatureCollection");
+    } catch (err) { alert("Invalid GeoJSON"); }
+  };
+  reader.readAsText(file);
+});
+
+function closeMapPopup() { document.getElementById("mapPopupModal").classList.remove("active"); }
+
+function saveCoordinatesFromPopup() {
+  let lat = document.getElementById("popupLatitude")?.value, lng = document.getElementById("popupLongitude")?.value;
+  if (lat && lng) {
+    document.getElementById("locAreaLocation").value = `${document.getElementById("locAreaLocation").value} (${lat}, ${lng})`;
+  }
+  closeMapPopup();
+  showToast("Coordinates Saved", "Coordinates saved to form", "success");
+}
+
+function clearSelectedCoords() {
+  document.getElementById("popupLatitude").value = "";
+  document.getElementById("popupLongitude").value = "";
+  if (mapMarker && popupMap) popupMap.removeLayer(mapMarker);
+  mapMarker = null;
+}
+
+function savePointToStorage(lat, lng, certNo, requestedBy) {
+  const newPoint = { id: Date.now(), lat: lat, lng: lng, certificationNo: certNo, requestedBy: requestedBy, dateSaved: new Date().toISOString() };
+  savedPoints.push(newPoint);
+  localStorage.setItem("savedMapPoints", JSON.stringify(savedPoints));
+  showToast("Point Saved", `✓ Point saved: ${certNo}`, "success");
+}
+
+function loadSavedPoints() {
+  const stored = localStorage.getItem("savedMapPoints");
+  if (stored) {
+    savedPoints = JSON.parse(stored);
+    savedPoints.forEach((point) => { addSavedPointMarker(point.lat, point.lng, point.certificationNo, point.requestedBy); });
+    showToast("Loaded", `Loaded ${savedPoints.length} saved points`, "info");
+  } else showToast("No Saved Points", "No saved points found", "info");
+}
+
+function addSavedPointMarker(lat, lng, certNo, requestedBy) {
+  if (!popupMap) return;
+  const customIcon = L.divIcon({
+    className: "custom-marker",
+    html: `<div style="background: #dc2626; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.4); cursor: pointer;"></div>`,
+    iconSize: [12, 12],
+    popupAnchor: [0, -6],
+  });
+  const marker = L.marker([lat, lng], { icon: customIcon }).addTo(popupMap);
+  const popupContent = `<div style="min-width: 180px;"><strong style="color: #1e3a8a;">📍 ${escapeHtml(certNo)}</strong><br><span style="font-size: 0.7rem;">👤 ${escapeHtml(requestedBy)}</span><br><span style="font-size: 0.6rem; color: #666; font-family: monospace;">${lat.toFixed(6)}, ${lng.toFixed(6)}</span><hr style="margin: 4px 0;"><div style="display: flex; gap: 4px;"><button class="action-btn view" onclick="viewSavedPoint('${escapeHtml(certNo)}')" style="font-size: 0.55rem;">📋 View Details</button><button class="action-btn delete" onclick="deleteSavedPointMarker('${escapeHtml(certNo)}')" style="font-size: 0.55rem;">🗑️ Delete</button></div></div>`;
+  marker.bindPopup(popupContent);
+  marker.savedPointData = { id: certNo, certNo: certNo, requestedBy: requestedBy, lat: lat, lng: lng };
+}
+
+function viewSavedPoint(certNo) {
+  const point = savedPoints.find((p) => p.certificationNo === certNo);
+  if (!point) return;
+  alert(`Certification No: ${point.certificationNo}\nRequested By: ${point.requestedBy}\nCoordinates: ${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}\nDate Saved: ${new Date(point.dateSaved).toLocaleString()}`);
+}
+
+function deleteSavedPointMarker(certNo) {
+  if (!confirm(`Delete point for "${certNo}"?`)) return;
+  savedPoints = savedPoints.filter((p) => p.certificationNo !== certNo);
+  localStorage.setItem("savedMapPoints", JSON.stringify(savedPoints));
+  if (popupMap) {
+    popupMap.eachLayer((layer) => {
+      if (layer instanceof L.Marker && layer.savedPointData && layer.savedPointData.certNo === certNo)
+        popupMap.removeLayer(layer);
+    });
+  }
+  showToast("Deleted", `✓ Deleted: ${certNo}`, "info");
+}
+
+function clearAllSavedPoints() {
+  if (confirm("⚠️ Delete ALL saved map points? This cannot be undone.")) {
+    savedPoints = [];
+    localStorage.removeItem("savedMapPoints");
+    if (popupMap) {
+      popupMap.eachLayer((layer) => {
+        if (layer instanceof L.Marker && layer.savedPointData) popupMap.removeLayer(layer);
+      });
+    }
+    showToast("Cleared", "All saved points cleared", "info");
+  }
+}
+
+function showSavePointDialog(lat, lng) {
+  pendingCoordinates = { lat: lat, lng: lng };
+  const modalHtml = `<div id="savePointModal" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10001; justify-content: center; align-items: center; padding:1rem;"><div style="background: white; border-radius: 24px; padding: 1.5rem; max-width: 400px; width: 100%;"><h3 style="color: #1e3a8a; margin-bottom: 0.8rem; font-size: 1.1rem;">📍 Save Map Point</h3><div style="margin-bottom: 0.8rem;"><label style="display: block; font-weight: 600; margin-bottom: 0.2rem; font-size: 0.7rem;">Coordinates:</label><input type="text" id="savePointCoords" readonly style="width: 100%; padding: 0.4rem 0.7rem; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 10px; font-family: monospace; font-size:0.8rem;" value="${lat.toFixed(6)}, ${lng.toFixed(6)}"></div><div style="margin-bottom: 0.8rem;"><label style="display: block; font-weight: 600; margin-bottom: 0.2rem; font-size: 0.7rem;">📄 Reference No.</label><input type="text" id="savePointCertNo" class="form-control" placeholder="e.g., LC-2026-001" style="width: 100%; padding:0.4rem 0.7rem; border:1px solid #cbd5e1; border-radius:10px; font-size:0.8rem;"></div><div style="margin-bottom: 1.2rem;"><label style="display: block; font-weight: 600; margin-bottom: 0.2rem; font-size: 0.7rem;">👤 Requested By</label><input type="text" id="savePointRequestedBy" class="form-control" placeholder="Name of requester" style="width: 100%; padding:0.4rem 0.7rem; border:1px solid #cbd5e1; border-radius:10px; font-size:0.8rem;"></div><div style="display: flex; gap: 0.6rem; justify-content: flex-end;"><button class="btn-secondary" onclick="closeSavePointModal()" style="padding:0.4rem 1rem; font-size:0.75rem;">Cancel</button><button class="btn-primary" onclick="confirmSavePoint()" style="padding:0.4rem 1rem; font-size:0.75rem;">💾 Save Point</button></div></div></div>`;
+  const existingModal = document.getElementById("savePointModal");
+  if (existingModal) existingModal.remove();
+  document.body.insertAdjacentHTML("beforeend", modalHtml);
+}
+
+function closeSavePointModal() {
+  const modal = document.getElementById("savePointModal");
+  if (modal) modal.remove();
+  pendingCoordinates = null;
+  currentTempMarker = null;
+}
+
+function confirmSavePoint() {
+  const certNo = document.getElementById("savePointCertNo")?.value.trim();
+  const requestedBy = document.getElementById("savePointRequestedBy")?.value.trim();
+  if (!certNo) { showToast("Missing Info", "Please enter Reference No.", "error"); return; }
+  if (!requestedBy) { showToast("Missing Info", "Please enter Requested By", "error"); return; }
+  if (pendingCoordinates) {
+    savePointToStorage(pendingCoordinates.lat, pendingCoordinates.lng, certNo, requestedBy);
+    closeSavePointModal();
+    addSavedPointMarker(pendingCoordinates.lat, pendingCoordinates.lng, certNo, requestedBy);
+    pendingCoordinates = null;
+    currentTempMarker = null;
+  }
+}
+
+function toggleSavePointMode(enable) {
+  savePointModeActive = enable;
+  const toggleBtn = document.getElementById("toggleSavePointBtn");
+  const hintText = document.getElementById("savePointHint");
+  if (savePointModeActive) {
+    if (toggleBtn) { toggleBtn.innerHTML = "💾 Save Point Mode: ON ✓"; toggleBtn.classList.add("save-point-active"); }
+    if (hintText) { hintText.innerHTML = "🔴 ACTIVE - Click anywhere on the map to save a point!"; hintText.style.color = "#10b981"; hintText.style.fontWeight = "bold"; }
+    if (measuringToolActive) {
+      if (currentMeasurementMode === "distance") document.getElementById("startMeasureLineBtn").click();
+      else if (currentMeasurementMode === "area") document.getElementById("startMeasureAreaBtn").click();
+    }
+    if (popupMap && !popupMap.savePointHandler) {
+      popupMap.savePointHandler = popupMap.on("click", (e) => {
+        if (savePointModeActive && !measuringToolActive) {
+          document.getElementById("popupLatitude").value = e.latlng.lat.toFixed(6);
+          document.getElementById("popupLongitude").value = e.latlng.lng.toFixed(6);
+          showSavePointDialog(e.latlng.lat, e.latlng.lng);
+          if (mapMarker) mapMarker.setLatLng(e.latlng);
+          else mapMarker = L.marker(e.latlng).addTo(popupMap);
+        }
+      });
+    }
+  } else {
+    if (toggleBtn) { toggleBtn.innerHTML = "💾 Save Point Mode: OFF"; toggleBtn.classList.remove("save-point-active"); }
+    if (hintText) { hintText.innerHTML = "💡 Toggle ON to save points by clicking on the map"; hintText.style.color = "#64748b"; hintText.style.fontWeight = "normal"; }
+    if (popupMap && popupMap.savePointHandler) {
+      popupMap.off("click", popupMap.savePointHandler);
+      popupMap.savePointHandler = null;
+    }
+  }
+}
+
+// ============================================
+// EVENT LISTENERS FOR SURVEY PANEL
+// ============================================
+document.getElementById("updateSurveyFromDMSBtn")?.addEventListener("click", updateTieFromDMS);
+document.getElementById("popupApplyEditsBtn")?.addEventListener("click", syncRowsFromPopupTable);
+document.getElementById("popupAddRowBtn")?.addEventListener("click", () => {
+  currentRows.push({ from: `Corner ${currentRows.length + 1}`, to: `Corner ${currentRows.length + 2}`, direction: "N", degrees: "0", minutes: "0", seconds: "00", quadrant: "E", distance: "100.00" });
+  refreshSurveyUI();
+});
+document.getElementById("popupResetTableBtn")?.addEventListener("click", () => {
+  if (confirm("⚠️ WARNING: This will REMOVE ALL LEGS from the table. Continue?")) {
+    currentRows = [];
+    refreshSurveyUI();
+    showToast("Table Cleared", "✓ Table cleared: 0 legs.", "info");
+  }
+});
+document.getElementById("popupExportGeoJSONBtn")?.addEventListener("click", exportSurveyGeoJSON);
+document.getElementById("popupExportShapefileBtn")?.addEventListener("click", exportSurveyShapefile);
+
+// Expose functions globally
+window.openSurveyMapPopup = openSurveyMapPopup;
+window.closeMapPopup = closeMapPopup;
+window.saveCoordinatesFromPopup = saveCoordinatesFromPopup;
+window.clearSelectedCoords = clearSelectedCoords;
+window.loadSavedPoints = loadSavedPoints;
+window.showSavedPointsList = showSavedPointsList;
+window.closeSavedPointsList = closeSavedPointsList;
+window.clearAllSavedPoints = clearAllSavedPoints;
+window.viewSavedPoint = viewSavedPoint;
+window.deleteSavedPointMarker = deleteSavedPointMarker;
+window.zoomToSavedPoint = zoomToSavedPoint;
+window.zoomToAddress = zoomToAddress;
+window.searchMapLocation = searchMapLocation;
+window.changeMapView = changeMapView;
+window.toggleSavePointMode = toggleSavePointMode;
+window.updateCategoryFilterFromAttribute = updateCategoryFilterFromAttribute;
+window.resetLayerColors = resetLayerColors;
+window.applyCategoryFilter = applyCategoryFilter;
+window.clearAllLayers = clearAllLayers;
+window.toggleLayerVisibility = toggleLayerVisibility;
+window.removeLayer = removeLayer;
+window.showSavePointDialog = showSavePointDialog;
+window.closeSavePointModal = closeSavePointModal;
+window.confirmSavePoint = confirmSavePoint;
+window.switchView = switchView;
+window.updateStatus = updateStatus;
+window.viewRecord = viewRecord;
+window.editRecord = editRecord;
+window.deleteRecord = deleteRecord;
+window.printRecord = printRecord;
+window.clearStatusSearch = clearStatusSearch;
+window.clearAccSearch = clearAccSearch;
+window.clearForm = clearForm;
+window.exportToExcel = exportToExcel;
+window.closeModal = closeModal;
+window.manualRefresh = manualRefresh;
+window.openLoginModal = openLoginModal;
+window.closeLoginModal = closeLoginModal;
+
+window.onclick = function (e) {
+  const loginModal = document.getElementById("loginModal");
+  if (e.target === loginModal) closeLoginModal();
+};
+
+// ============================================
+// INITIALIZATION
+// ============================================
+document.addEventListener("DOMContentLoaded", function() {
+  // Add spinner animation
+  const style = document.createElement('style');
+  style.textContent = `@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`;
+  document.head.appendChild(style);
+  
+  checkSession();
+  renderMainNavigation();
+  renderUserMenu();
+  fetchRecords();
+  initNumberEditors();
+  refreshLatestNumbersDisplay();
+  initAreaLocationListeners();
+  
+  const form = document.getElementById("modalLoginForm");
+  if (form) form.addEventListener("submit", handleModalLogin);
+  
+  setStatus("Ready · System loaded successfully!", "info");
+});
+</script>
+</body>
+</html>
